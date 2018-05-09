@@ -11,7 +11,7 @@ Main Reference:[Route Information Protocol](https://en.wikipedia.org/wiki/Routin
 + DV routing:
     * Bellman-Ford algorithm
     * Ford-Fulkerson
-+ RIP hop count
++ RIP hop count metric
 + split horizon, route poisoning, holddown
 + RIP version 2: 224.0.0.9 is used to broadcast
 + UDP on port 520
@@ -25,7 +25,22 @@ Main Reference:[Route Information Protocol](https://en.wikipedia.org/wiki/Routin
     * response
 
 ![RIPv2 message](https://github.com/Leo-xh/Virtual-Routing/blob/master/imgs/RIPv2-message.PNG)
+4 threads:
 
++ listenUDPThread
+
+    event driven
+
++ routerWatchThread
+
+    determine whether to remove a router
+
++ updateThread
++ mainThread
+
+how to send and receive data?
+
+check the buffer regularly.
 
 
 
