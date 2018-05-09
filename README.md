@@ -23,6 +23,7 @@ Main Reference:[Route Information Protocol](https://en.wikipedia.org/wiki/Routin
 + RIPv2 message
     * request
     * response
+
 ![RIPv2 message](https://github.com/Leo-xh/Virtual-Routing/blob/master/imgs/RIPv2-message.PNG)
 
 
