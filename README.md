@@ -7,9 +7,10 @@ Application Layer Virtual Routing
 ## Self-organized 
 ### RIP
 Main Reference:[Route Information Protocol](https://en.wikipedia.org/wiki/Routing_Information_Protocol#RIPng)
-
-RIPv2 message
-![RIPv2 message](\imgs\RIPv2-message.PNG)
+Components:
++ 
++ RIPv2 message
+![RIPv2 message](https://github.com/Leo-xh/Virtual-Routing/blob/master/imgs/RIPv2-message.PNG)
 
 
 
