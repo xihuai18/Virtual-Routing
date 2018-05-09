@@ -38,8 +38,9 @@ class RIPv2(object):
         self.routeTimer = {}
         self.holddwonTimer = {}
         self.neighbour = []
-        self.neighbourVector = {}
+#        self.neighbourVector = {}
         self.distanceVector = {}
+        self.neighbourTimer = {}
         self.recvSocket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.recvSocket.bind((self.address))
 
@@ -62,12 +63,25 @@ class RIPv2(object):
         self.distanceVector.update(neighbourItem.Dest, neighbourItem)
         self.neighbour.append(neighbourItem.Dest)
         self.neighbourVector.update(neighbourItem.Dest, {})
+        self.neighbourTimer.update(neighbourItem.Dest, threading.Timer(
+            180, self.__removeNeighbour, args=[neighbourItem.Dest]))
+        self.neighbourTimer[neighbourItem.Dest].start()
 
-    def __watchRouter(self):
-        pass
+    def __removeNeighbour(self, neighubour):
+        def __realRemove(self, neighubour):
+            self.neighbour.remove(neighubour)
+            self.distanceVector.pop(neighubour)
+        self.neighbourTimer.pop(neighubour)
+        threading.Timer(60, __realRemove, args=[self, neighubour]).start()
 
-    def __boardcast(self):
-        pass
+    def __boardcast(self, command):
+        if command == 0:
+            for addr in self.distanceVector:
+                self.__sendRequestPacket(addr)
+        elif command == 1:
+            for addr in self.distanceVector:
+                self.__sendResponsePacket(addr)
+        threading.Timer(30, self.__boardcast, args=[1]).start()
 
     def __listenUDP(self):
         self.buffer = self.recvSocket.recv(1024)
