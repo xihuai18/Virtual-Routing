@@ -1,0 +1,105 @@
+\documentclass[15pt]{ctexart}
+\usepackage{xeCJK}
+	\setCJKmainfont{SimSun}         % 缺省中文字体为宋体
+	\setmainfont{Times New Roman}   % 缺省英文字体 Times New Roman
+\usepackage{geometry}
+	% \geometry{left=2.5cm,right=2.5cm,top=2.5cm,bottom=3.5cm}
+	\geometry{bottom=3.5cm}
+\usepackage{float}
+\usepackage{listings}
+\usepackage{graphicx}
+\usepackage{appendix}
+\usepackage[colorlinks]{hyperref}
+\usepackage{amsmath}
+\usepackage{indentfirst}
+\usepackage{enumerate}
+\usepackage{fancyhdr}
+\usepackage{textcomp}
+\usepackage{appendix} 
+\usepackage{multirow}
+\usepackage{geometry}
+\geometry{verbose,letterpaper}
+\usepackage{media9}
+\pagestyle{fancy}
+\lhead{虚拟路由}
+\rhead{\thepage}
+\cfoot{}
+\lstset{frameshape={RYRYNYYYY}{yny}{yny}{RYRYNYYYY}, backgroundcolor=\color[RGB]{245,245,244}}
+
+\begin{document}
+\input{cover}
+\tableofcontents
+\newpage
+
+\begin{table}[H]
+	\centering
+	\begin{tabular}{|c|}
+		\hline
+		Command \; \vline \; Version \; \vline \; Routing domain \; \\
+		\hline
+		Address family \; \vline \; Route tag \; \\
+		\hline
+		address \\
+		\hline
+		Netmask \\
+		\hline
+		Next hop \\
+		\hline
+		metric \\
+		\hline
+		repeat of last 20 bytes \\
+		\hline
+		$\cdots$ \\
+		\hline 
+	\end{tabular}	
+\end{table}
+报文项解释：
+\begin{enumerate}
+	\item Command（1 Byte）：指明这条报文的类型。
+	\begin{enumerate}[]
+		\item 0：普通报文。
+		\item 1：请求报文。
+		\item 2：响应（包含路由表）报文。
+		\item 3：广播request。
+		\item 4：广播response。
+	\end{enumerate}
+	\item Version（1 Byte）：RIP协议的版本。
+	\item Routing domain（2 Bytes）：指明这是RIP中的哪一步。
+	\item Address family（2 Bytes）：使用什么作为地址，使用IP该项为2。
+	\item Route tag（2 Bytes）：本项目中不用。
+	\item address（6 Bytes）：ip和端口号。
+	\item Netmask（4 Bytes）：子网掩码。
+	\item Net hop（6 Bytes）：下一跳路由的ip和端口。
+\end{enumerate}
+\begin{table}[H]
+	\centering
+	\begin{tabular}{|c|}
+		\hline
+		Command \; \vline \; Version \; \vline \; Routing domain \; \\
+		\hline
+		Address family \; \vline \; Route tag \; \\
+		\hline
+		address \\
+		\hline
+		Next hop \\
+		\hline
+		metric \\
+		\hline
+	\end{tabular}
+\end{table}
+报文项的内容和response表项一致。
+\begin{table}[H]
+	\centering
+	\begin{tabular}{|c|}
+		\hline
+		Command \\
+		\hline
+		source address \\
+		\hline
+		destination address \\
+		\hline
+	\end{tabular}		
+\end{table}
+其中的源地址和目的地址包含ip和端口号。
+\par 需要特别指明的是当用于广播时，目的ip写的是224.0.0.9；且在RIP协议条目中Routing domain后加上源ip和端口。
+\end{document}
