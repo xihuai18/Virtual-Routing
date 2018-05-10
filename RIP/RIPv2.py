@@ -50,14 +50,19 @@ class RIPv2(object):
     def __begin(self):
         self.listenUDPThread = threading.Thread(target=self.listenUDP)
         self.listenUDPThread.start()
-        self.__boardcast(3)
+        self.__boardcast(1)
 
     def __initDistanceVector(self):
         with open(self.topologyFileName, 'r') as fileReader:
-            line = fileReader.readline()
-            (ip, port) = line.split(",")[0:2]
-            port = int(port)
-            self.addNeighbour(VectorItem((ip, port), (ip, port), 1))
+            lines = fileReader.readlines()
+            for line in lines:
+                (ip, port) = line.split(",")[0:2]
+                port = int(port)
+                if (ip, port) == self.address:
+                    for i in range(2, len(line.split(",")), 2):
+                        (ip, port) = line.split(",")[i:i+1]
+                        port = int(port)
+                        self.addNeighbour(VectorItem((ip, port), (ip, port), 1))
 
     def __addNeighbour(self, neighbourItem, neighbourVector):
         self.distanceVector.update(neighbourItem.Dest, neighbourItem)
@@ -74,17 +79,31 @@ class RIPv2(object):
         self.neighbourTimer.pop(neighubour)
         threading.Timer(60, __realRemove, args=[self, neighubour]).start()
 
-    def __boardcast(self, command):
-        if command == 3:
+    def __multicast(self, command):
+        '''
+        command = 1 : multicast request
+        command = 2 : multicast response
+        '''
+        if command == 1:
             for addr in self.neighbour:
                 self.__sendRequestPacket(addr)
-        elif command == 4:
+        elif command == 2:
             for addr in self.neighbour:
                 self.__sendResponsePacket(addr)
-        threading.Timer(30, self.__boardcast, args=[4]).start()
+                
+        threading.Timer(30, self.__boardcast, args=[2]).start()
+        
+#    def __boardcast(self, command):
+#        if command == 3:
+#            for addr in self.neighbour:
+#                self.__sendRequestPacket(addr)
+#        elif command == 4:
+#            for addr in self.neighbour:
+#                self.__sendResponsePacket(addr)
+#        threading.Timer(30, self.__boardcast, args=[4]).start()
 
     def __listenUDP(self):
-        (self.buffer, preHop) = self.recvSocket.recvfrom(1024)
+        (self.buffer,) = self.recvSocket.recv(1024)
         command = struct.unpack("!B", self.buffer[:1])
         if command == 0:
             self.__normalPacketReceived(self.buffer[2:])
@@ -103,6 +122,7 @@ class RIPv2(object):
         self.__sendResponsePacket(address)
 
     def __responsePacketReceived(self, data):
+<<<<<<< HEAD
         neighbourVector = {}
         # TODO 提取报文中的各项
         data = data[32:]
@@ -122,6 +142,21 @@ class RIPv2(object):
         for addr in self.neighbour:
             if(addr != preHop):
                 self.__sendPacket(data, addr)
+=======
+        pass
+    
+#    # complete data!
+#    # RPF
+#    def __boardcastReceived(self, data, preHop):
+#        addr = struct.unpack("!HI", data[4:10])
+#        addr[0] = utils.int2ip(addr[0])
+#        bestHop = self.distanceVector[addr].nextHop
+#        if(bestHop != preHop):
+#            return
+#        for addr in self.neighbour:
+#            if(addr != preHop):
+#                self.__sendPacket(data, addr)
+>>>>>>> 6d761b4567dc69be077ccb39e30c85107fecbcc7
 
     def send(self, data, address):
         src = self.address
