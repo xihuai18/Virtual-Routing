@@ -60,9 +60,10 @@ class RIPv2(object):
                 port = int(port)
                 if (ip, port) == self.address:
                     for i in range(2, len(line.split(",")), 2):
-                        (ip, port) = line.split(",")[i:i+1]
+                        (ip, port) = line.split(",")[i:i + 1]
                         port = int(port)
-                        self.addNeighbour(VectorItem((ip, port), (ip, port), 1))
+                        self.addNeighbour(VectorItem(
+                            (ip, port), (ip, port), 1))
 
     def __addNeighbour(self, neighbourItem, neighbourVector):
         self.distanceVector.update(neighbourItem.Dest, neighbourItem)
@@ -90,9 +91,9 @@ class RIPv2(object):
         elif command == 2:
             for addr in self.neighbour:
                 self.__sendResponsePacket(addr)
-                
+
         threading.Timer(30, self.__boardcast, args=[2]).start()
-        
+
 #    def __boardcast(self, command):
 #        if command == 3:
 #            for addr in self.neighbour:
@@ -131,15 +132,13 @@ class RIPv2(object):
         # TODO if there is a need, 提取报文中的各项
         data = data[32:]
         for i in range(0, len(data), 20):
-            DestIp, DestPort, nextHopIp, nextHopPort, metric = struct.unpack("!IHIHI", data[i:i+20])
-            item = VectorItem((DestIp, DestPort), (nextHopIp, nextHopPort), metric)
+            DestIp, DestPort, nextHopIp, nextHopPort, metric = struct.unpack("!IHIHI", data[
+                                                                             i:i + 20])
+            item = VectorItem((DestIp, DestPort),
+                              (nextHopIp, nextHopPort), metric)
             neighbourVector.update(item)
         self.__updateVector(neighbourVector)
 
-<<<<<<< HEAD
-    
-=======
->>>>>>> 0b1960d855200c45594c7e00bbea2aa1e69830e6
 #    # complete data!
 #    # RPF
 #    def __boardcastReceived(self, data, preHop):
@@ -169,34 +168,30 @@ class RIPv2(object):
         s.sendto(packet, nextHop)
         s.close()
 
-<<<<<<< HEAD
-#    def __sendNormalPacket(self, data, address):
-#        pass
-=======
     def __sendNormalPacket(self, data, address):
         packet = struct.pack("!2BHIHHHIHIIHI", 2, self.version, 0, utils.ip2int(self.address[0]),
-                                self.address[1], 2, 0, utils.ip2int(address[0]),
-                                address[1], utils.ip2int("255.255.255.0"), 0, 0, 16) 
+                             self.address[1], 2, 0, utils.ip2int(address[0]),
+                             address[1], utils.ip2int("255.255.255.0"), 0, 0, 16)
         packet += struct.pack("!%ds" % len(data), data)
         self.__sendPacket(packet, address)
->>>>>>> 0b1960d855200c45594c7e00bbea2aa1e69830e6
 
     def __sendRequestPacket(self, address):
-        packet = struct.pack("!2BHIHHHIHIHI", 1, self.version, 0, utils.ip2int(self.address[0]), 
-                                self.address[1], 2, 0, utils.ip2int(address[0]),
-                                address[1], 0, 0, 16)
+        packet = struct.pack("!2BHIHHHIHIHI", 1, self.version, 0, utils.ip2int(self.address[0]),
+                             self.address[1], 2, 0, utils.ip2int(address[0]),
+                             address[1], 0, 0, 16)
         self.__sendPacket(packet, address)
 
     def __sendResponsePacket(self, address):
         packet = struct.pack("!2BHIHHHIHIIHI", 2, self.version, 0, utils.ip2int(self.address[0]),
-                                self.address[1], 2, 0, utils.ip2int(address[0]),
-                                address[1], utils.ip2int("255.255.255.0"), 0, 0, 16) 
+                             self.address[1], 2, 0, utils.ip2int(address[0]),
+                             address[1], utils.ip2int("255.255.255.0"), 0, 0, 16)
         for item in self.distanceVector:
             DestIp = utils.ip2int(item.Dest[0])
             DestPort = item.Dest[1]
             nextHopIp = utils.ip2int(item.nextHop[0])
             nextHopPort = item.nextHop
-            packet += struct.pack("!IHIHI", DestIp, DestPort, nextHopIp, nextHopPort, item.metric)
+            packet += struct.pack("!IHIHI", DestIp, DestPort,
+                                  nextHopIp, nextHopPort, item.metric)
         self.__sendPacket(packet, address)
 
     def __updateVector(self, neighbour, neighbourVector):
