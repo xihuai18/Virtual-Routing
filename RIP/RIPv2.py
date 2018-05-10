@@ -197,5 +197,3 @@ class RIPv2(object):
     def __updateVector(self, neighbour, neighbourVector):
         pass
 
-    def __BellmanFord(self):
-        pass
