@@ -104,47 +104,38 @@ class RIPv2(object):
 
     def __listenUDP(self):
         (self.buffer,) = self.recvSocket.recv(1024)
-        command = struct.unpack("!B", self.buffer[:1])
-        if command == 0:
-            self.__normalPacketReceived(self.buffer[2:])
-        elif command == 1:
-            self.__requestPacketReceived(self.buffer[2:])
+        ip, port = struct.unpack("!IH", self.buffer[14:20])
+        DestAddress = (utils.int2ip(ip), port)
+        if DestAddress != self.address:
+            self.__sendPacket(self.buffer, DestAddress)
+            return
         else:
-            self.__responsePacketReceived(self.buffer[2:])
+            command = struct.unpack("!B", self.buffer[:1])
+            if command == 0:
+                self.__normalPacketReceived(self.buffer[2:])
+            elif command == 1:
+                self.__requestPacketReceived(self.buffer[2:])
+            else:
+                self.__responsePacketReceived(self.buffer[2:])
 
     def __normalPacketReceived(self, data):
-        self.summit = data
+        self.summit = data[32:]
 
     def __requestPacketReceived(self, data):
-        # TODO 提取报文中的各项
         ip, port = struct.unpack("!IH", data[2:8])
         address = (utils.int2ip(ip), port)
         self.__sendResponsePacket(address)
 
     def __responsePacketReceived(self, data):
-<<<<<<< HEAD
         neighbourVector = {}
-        # TODO 提取报文中的各项
+        # TODO if there is a need, 提取报文中的各项
         data = data[32:]
         for i in range(0, len(data), 20):
             DestIp, DestPort, nextHopIp, nextHopPort, metric = struct.unpack("!IHIHI", data[i:i+20])
             item = VectorItem((DestIp, DestPort), (nextHopIp, nextHopPort), metric)
             neighbourVector.update(item)
+        self.__updateVector(neighbourVector)
 
-    # complete data!
-    # RPF
-    def __boardcastReceived(self, data, preHop):
-        addr = struct.unpack("!HI", data[4:10])
-        addr[0] = utils.int2ip(addr[0])
-        bestHop = self.distanceVector[addr].nextHop
-        if(bestHop != preHop):
-            return
-        for addr in self.neighbour:
-            if(addr != preHop):
-                self.__sendPacket(data, addr)
-=======
-        pass
-    
 #    # complete data!
 #    # RPF
 #    def __boardcastReceived(self, data, preHop):
@@ -156,7 +147,6 @@ class RIPv2(object):
 #        for addr in self.neighbour:
 #            if(addr != preHop):
 #                self.__sendPacket(data, addr)
->>>>>>> 6d761b4567dc69be077ccb39e30c85107fecbcc7
 
     def send(self, data, address):
         src = self.address
@@ -176,16 +166,20 @@ class RIPv2(object):
         s.close()
 
     def __sendNormalPacket(self, data, address):
-        pass
+        packet = struct.pack("!2BHIHHHIHIIHI", 2, self.version, 0, utils.ip2int(self.address[0]),
+                                self.address[1], 2, 0, utils.ip2int(address[0]),
+                                address[1], utils.ip2int("255.255.255.0"), 0, 0, 16) 
+        packet += struct.pack("!%ds" % len(data), data)
+        self.__sendPacket(packet, address)
 
     def __sendRequestPacket(self, address):
-        packet = struct.pack("!2BHIHHHIHIHI", 1, 0, 0, utils.ip2int(self.address[0]), 
+        packet = struct.pack("!2BHIHHHIHIHI", 1, self.version, 0, utils.ip2int(self.address[0]), 
                                 self.address[1], 2, 0, utils.ip2int(address[0]),
                                 address[1], 0, 0, 16)
         self.__sendPacket(packet, address)
 
     def __sendResponsePacket(self, address):
-        packet = struct.pack("!2BHIHHHIHIIHI", 2, 0, 0, utils.ip2int(self.address[0]),
+        packet = struct.pack("!2BHIHHHIHIIHI", 2, self.version, 0, utils.ip2int(self.address[0]),
                                 self.address[1], 2, 0, utils.ip2int(address[0]),
                                 address[1], utils.ip2int("255.255.255.0"), 0, 0, 16) 
         for item in self.distanceVector:
@@ -199,5 +193,5 @@ class RIPv2(object):
     def __updateVector(self, neighbourVector):
         pass
 
-#    def __BellmanFord(self):
-#        pass
+    def __BellmanFord(self):
+        pass
