@@ -37,6 +37,8 @@
 		\hline
 		Command \; \vline \; Version \; \vline \; Routing domain \; \\
 		\hline
+		Source address \\
+		\hline
 		Address family \; \vline \; Route tag \; \\
 		\hline
 		address \\
@@ -65,6 +67,7 @@
 	\end{enumerate}
 	\item Version（1 Byte）：RIP协议的版本。
 	\item Routing domain（2 Bytes）：指明这是RIP中的哪一步。
+	\item Source address（6 Bytes）：指明发送方的源地址和监听端口。
 	\item Address family（2 Bytes）：使用什么作为地址，使用IP该项为2。
 	\item Route tag（2 Bytes）：本项目中不用。
 	\item address（6 Bytes）：ip和端口号。
@@ -76,6 +79,8 @@
 	\begin{tabular}{|c|}
 		\hline
 		Command \; \vline \; Version \; \vline \; Routing domain \; \\
+		\hline
+		Source address \\
 		\hline
 		Address family \; \vline \; Route tag \; \\
 		\hline
@@ -101,5 +106,5 @@
 	\end{tabular}		
 \end{table}
 其中的源地址和目的地址包含ip和端口号。
-\par 需要特别指明的是当用于广播时，目的ip写的是224.0.0.9；且在RIP协议条目中Routing domain后加上源ip和端口。
+\par 需要特别指明的是当用于广播时，目的ip写的是224.0.0.9。
 \end{document}

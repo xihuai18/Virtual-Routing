@@ -38,11 +38,9 @@ Main Reference:[Route Information Protocol](https://en.wikipedia.org/wiki/Routin
 + updateThread
 + mainThread
 
-how to send and receive data?
-
-check the buffer regularly.
-
-
+1. How to send and receive data?
+    check the buffer regularly.
+2. Is it necessary to maintain the route table?
 
 ### OSPF
 
