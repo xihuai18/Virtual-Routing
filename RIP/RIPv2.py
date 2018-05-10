@@ -104,19 +104,19 @@ class RIPv2(object):
 
     def __listenUDP(self):
         (self.buffer,) = self.recvSocket.recv(1024)
-        ip, port = struct.unpack("!IH", self.buffer[14:20])
-        DestAddress = (utils.int2ip(ip), port)
-        if DestAddress != self.address:
-            self.__sendPacket(self.buffer, DestAddress)
-            return
-        else:
-            command = struct.unpack("!B", self.buffer[:1])
-            if command == 0:
-                self.__normalPacketReceived(self.buffer[2:])
-            elif command == 1:
-                self.__requestPacketReceived(self.buffer[2:])
+        command = struct.unpack("!B", self.buffer[:1])
+        if command == 0:
+            ip, port = struct.unpack("!IH", self.buffer[7:13])
+            DestAddress = (utils.int2ip(ip), port)
+            if DestAddress != self.address:
+                self.__sendPacket(self.buffer, DestAddress)
+                return
             else:
-                self.__responsePacketReceived(self.buffer[2:])
+                self.__normalPacketReceived(self.buffer[2:])
+        elif command == 1:
+            self.__requestPacketReceived(self.buffer[2:])
+        else:
+            self.__responsePacketReceived(self.buffer[2:])
 
     def __normalPacketReceived(self, data):
         self.summit = data[32:]
@@ -159,16 +159,15 @@ class RIPv2(object):
         nextHop = None
         for item in distanceVector:
             if item.Dest == destAddress:
-                nextHop = item.nextHop
+                nextHop = (utils.int2ip(item.nextHop[0]), item.nextHop[1])
                 break
         s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         s.sendto(packet, nextHop)
         s.close()
 
     def __sendNormalPacket(self, data, address):
-        packet = struct.pack("!2BHIHHHIHIIHI", 2, self.version, 0, utils.ip2int(self.address[0]),
-                                self.address[1], 2, 0, utils.ip2int(address[0]),
-                                address[1], utils.ip2int("255.255.255.0"), 0, 0, 16) 
+        packet = struct.pack("!BIHIH", 0, utils.ip2int(self.address[0]), self.address[1],
+                                utils.ip2int(address[0]), address[1]) 
         packet += struct.pack("!%ds" % len(data), data)
         self.__sendPacket(packet, address)
 
