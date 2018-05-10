@@ -122,7 +122,6 @@ class RIPv2(object):
         self.__sendResponsePacket(address)
 
     def __responsePacketReceived(self, data):
-<<<<<<< HEAD
         neighbourVector = {}
         # TODO 提取报文中的各项
         data = data[32:]
@@ -131,19 +130,6 @@ class RIPv2(object):
             item = VectorItem((DestIp, DestPort), (nextHopIp, nextHopPort), metric)
             neighbourVector.update(item)
 
-    # complete data!
-    # RPF
-    def __boardcastReceived(self, data, preHop):
-        addr = struct.unpack("!HI", data[4:10])
-        addr[0] = utils.int2ip(addr[0])
-        bestHop = self.distanceVector[addr].nextHop
-        if(bestHop != preHop):
-            return
-        for addr in self.neighbour:
-            if(addr != preHop):
-                self.__sendPacket(data, addr)
-=======
-        pass
     
 #    # complete data!
 #    # RPF
@@ -156,7 +142,6 @@ class RIPv2(object):
 #        for addr in self.neighbour:
 #            if(addr != preHop):
 #                self.__sendPacket(data, addr)
->>>>>>> 6d761b4567dc69be077ccb39e30c85107fecbcc7
 
     def send(self, data, address):
         src = self.address
@@ -175,8 +160,8 @@ class RIPv2(object):
         s.sendto(packet, nextHop)
         s.close()
 
-    def __sendNormalPacket(self, data, address):
-        pass
+#    def __sendNormalPacket(self, data, address):
+#        pass
 
     def __sendRequestPacket(self, address):
         packet = struct.pack("!2BHIHHHIHIHI", 1, 0, 0, utils.ip2int(self.address[0]), 
@@ -196,7 +181,7 @@ class RIPv2(object):
             packet += struct.pack("!IHIHI", DestIp, DestPort, nextHopIp, nextHopPort, item.metric)
         self.__sendPacket(packet, address)
 
-    def __updateVector(self, neighbourVector):
+    def __updateVector(self, neighbour, neighbourVector):
         pass
 
 #    def __BellmanFord(self):
