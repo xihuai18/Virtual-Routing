@@ -106,20 +106,20 @@ class RIPv2(object):
         (self.buffer,) = self.recvSocket.recv(1024)
         command = struct.unpack("!B", self.buffer[:1])
         if command == 0:
-            ip, port = struct.unpack("!IH", self.buffer[7:13])
+            (ip, port) = struct.unpack("!IH", self.buffer[7:13])
             DestAddress = (utils.int2ip(ip), port)
             if DestAddress != self.address:
                 self.__sendPacket(self.buffer, DestAddress)
                 return
             else:
-                self.__normalPacketReceived(self.buffer[2:])
+                self.__normalPacketReceived(self.buffer[1:])
         elif command == 1:
             self.__requestPacketReceived(self.buffer[2:])
         else:
             self.__responsePacketReceived(self.buffer[2:])
 
     def __normalPacketReceived(self, data):
-        self.summit = data[32:]
+        self.summit = data[12:]
 
     def __requestPacketReceived(self, data):
         ip, port = struct.unpack("!IH", data[2:8])
