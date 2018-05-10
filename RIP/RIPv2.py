@@ -3,8 +3,8 @@ import socket
 import threading
 import time
 import struct
-import os
-os.path.append("../utils/")
+import sys
+sys.path.append("../utils/")
 import utils
 
 
@@ -29,10 +29,8 @@ class RIPv2(object):
 
     DistanceVectorLock = threading.Lock()
 
-    def __init__(self, address, port, netmask):
+    def __init__(self, address):
         self.address = address
-        self.port = port
-        self.netmask = netmask
         self.buffer = b''
         self.summit = b''
         self.routeTimer = {}
@@ -41,15 +39,16 @@ class RIPv2(object):
         self.distanceVector = {}
         self.neighbourTimer = {}
         self.recvSocket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        self.recvSocket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self.recvSocket.bind((self.address))
 
         self.__initDistanceVector()
         self.__begin()
 
     def __begin(self):
-        self.listenUDPThread = threading.Thread(target=self.listenUDP)
+        self.listenUDPThread = threading.Thread(target=self.__listenUDP)
         self.listenUDPThread.start()
-        self.__boardcast(1)
+        self.__multicast(1)
 
     def __initDistanceVector(self):
         with open(self.topologyFileName, 'r') as fileReader:
@@ -90,7 +89,7 @@ class RIPv2(object):
             for addr in self.neighbour:
                 self.__sendResponsePacket(addr)
                 
-        threading.Timer(30, self.__boardcast, args=[2]).start()
+        threading.Timer(30, self.__multicast, args=[2]).start()
         
 
     def __listenUDP(self):
@@ -124,7 +123,7 @@ class RIPv2(object):
         sourceAddress = (sourceIp, sourcePort)
         data = data[10:]
         for i in range(0, len(data), 21):
-            DestIp, DestPort, nextHopIp, nextHopPort, metric = struct.unpack("!IHIHB", data[i+4:i+21])
+            DestIp, DestPort, nextHopIp, nextHopPort, metric = struct.unpack("!IHIHB", data[i+4:i+17])
             DestIp = utils.int2ip(DestIp)
             nextHopIp = utils.int2ip(nextHopPort)
             item = VectorItem((DestIp, DestPort), (nextHopIp, nextHopPort), metric)
@@ -181,7 +180,7 @@ class RIPv2(object):
             DestPort = item.Dest[1]
             nextHopIp = utils.ip2int(item.nextHop[0])
             nextHopPort = item.nextHop[1]
-            packet += struct.pack("!IHIHIB", DestIp, DestPort, nextHopIp, nextHopPort, item.metric)
+            packet += struct.pack("!IHIHB", DestIp, DestPort, nextHopIp, nextHopPort, item.metric)
         self.__sendPacket(packet, address)
 
     def __updateVector(self, neighbourVector):

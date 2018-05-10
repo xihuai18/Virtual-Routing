@@ -1,4 +1,4 @@
-This is XeTeX, Version 3.14159265-2.6-0.99998 (TeX Live 2017/W32TeX) (preloaded format=xelatex 2018.3.24)  10 MAY 2018 17:11
+This is XeTeX, Version 3.14159265-2.6-0.99998 (TeX Live 2017/W32TeX) (preloaded format=xelatex 2018.3.24)  10 MAY 2018 18:10
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -1910,15 +1910,15 @@ LaTeX Font Warning: Font shape `OMX/cmex/m/n' in size <10.53937> not available
 
 
 LaTeX Warning: The counter will not be printed.
-             The label is:  on input line 61.
+             The label is:  on input line 59.
 
 [2]
-Package atveryend Info: Empty hook `BeforeClearDocument' on input line 113.
+Package atveryend Info: Empty hook `BeforeClearDocument' on input line 110.
  [3]
-Package atveryend Info: Empty hook `AfterLastShipout' on input line 113.
+Package atveryend Info: Empty hook `AfterLastShipout' on input line 110.
  (./report.aux)
-Package atveryend Info: Empty hook `AtVeryEndDocument' on input line 113.
-Package atveryend Info: Empty hook `AtEndAfterFileList' on input line 113.
+Package atveryend Info: Empty hook `AtVeryEndDocument' on input line 110.
+Package atveryend Info: Empty hook `AtEndAfterFileList' on input line 110.
 
 
 LaTeX Font Warning: Size substitutions with differences
@@ -1927,15 +1927,15 @@ LaTeX Font Warning: Size substitutions with differences
 
 LaTeX Font Warning: Some font shapes were not available, defaults substituted.
 
-Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 113.
+Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 110.
  ) 
 Here is how much of TeX's memory you used:
  30389 strings out of 493007
  595405 string characters out of 6137965
- 657592 words of memory out of 5000000
+ 656592 words of memory out of 5000000
  34074 multiletter control sequences out of 15000+600000
  532548 words of font info for 57 fonts, out of 8000000 for 9000
  1348 hyphenation exceptions out of 8191
- 57i,11n,68p,10432b,379s stack positions out of 5000i,500n,10000p,200000b,80000s
+ 57i,12n,68p,10432b,379s stack positions out of 5000i,500n,10000p,200000b,80000s
 
-Output written on report.xdv (4 pages, 15440 bytes).
+Output written on report.xdv (4 pages, 14880 bytes).
