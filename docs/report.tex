@@ -62,8 +62,8 @@
 		\item 0：普通报文。
 		\item 1：请求报文。
 		\item 2：响应（包含路由表）报文。
-		\item 3：广播request。
-		\item 4：广播response。
+		% \item 3：广播request。
+		% \item 4：广播response。
 	\end{enumerate}
 	\item Version（1 Byte）：RIP协议的版本。
 	\item Routing domain（2 Bytes）：指明这是RIP中的哪一步。
@@ -103,8 +103,10 @@
 		\hline
 		destination address \\
 		\hline
+		payload \\
+		\hline
 	\end{tabular}		
 \end{table}
-其中的源地址和目的地址包含ip和端口号。
-\par 需要特别指明的是当用于广播时，目的ip写的是224.0.0.9。
+其中的源地址和目的地址包含ip和监听端口号。
+% \par 需要特别指明的是当用于广播时，目的ip写的是224.0.0.9。
 \end{document}
