@@ -152,8 +152,8 @@ class RIPv2(object):
     def __sendPacket(self, packet, address):
         # determine where to send
         nextHop = None
-        for item in distanceVector:
-            if item.Dest == destAddress:
+        for item in self.distanceVector:
+            if item.Dest == address:
                 nextHop = item.nextHop
                 break
         s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
