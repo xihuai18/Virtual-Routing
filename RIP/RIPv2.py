@@ -11,6 +11,7 @@ import utils
 class VectorItem(object):
 
     def __init__(self, Dest, nextHop, metric):
+        # all is a tulple contain string ip and int port
         self.Dest = Dest
         self.nextHop = nextHop
         self.metric = metric
@@ -18,22 +19,24 @@ class VectorItem(object):
 
 class RIPv2(object):
     version = 2
-    addFamily = 2
+    addrFamily = 2
     tag = 0
-    boardcastIP = "224.0.0.9"
+    # boardcastIP = "224.0.0.9"
     topologyFileName = "topo.txt"
     UpdateInterval = 30
     InvalidInterval = 180
     FlushInterval = 240
     HolddownInterval = 180
-
+    summit = b''
+    path = b''
     DistanceVectorLock = threading.Lock()
+    summitLock = threading.Lock()
 
     def __init__(self, address):
         self.address = address
         self.buffer = b''
-        self.summit = b''
-        self.routeTimer = {}
+
+        # self.routeTimer = {}
         self.holddwonTimer = {}
         self.neighbour = []
         self.distanceVector = {}
@@ -58,14 +61,13 @@ class RIPv2(object):
                 port = int(port)
                 if (ip, port) == self.address:
                     for i in range(2, len(line.split(",")), 2):
-                        (ip, port) = line.split(",")[i:i+1]
+                        (ip, port) = line.split(",")[i:i+2]
                         port = int(port)
-                        self.addNeighbour(VectorItem((ip, port), (ip, port), 1))
+                        self.__addNeighbour(VectorItem((ip, port), (ip, port), 1))
 
-    def __addNeighbour(self, neighbourItem, neighbourVector):
+    def __addNeighbour(self, neighbourItem):
         self.distanceVector.update({neighbourItem.Dest: neighbourItem})
         self.neighbour.append(neighbourItem.Dest)
-        self.neighbourVector.update({neighbourItem.Dest:{}})
         self.neighbourTimer.update({neighbourItem.Dest:threading.Timer(
             180, self.__removeNeighbour, args=[neighbourItem.Dest])})
         self.neighbourTimer[neighbourItem.Dest].start()
@@ -92,32 +94,56 @@ class RIPv2(object):
         threading.Timer(30, self.__multicast, args=[2]).start()
         
 
-    def __listenUDP(self):
-        (self.buffer,) = self.recvSocket.recv(1024)
-        command = struct.unpack("!B", self.buffer[:1])
-        if command == 0:
+    def __handleData(self, data):
+        command, = struct.unpack("!B", self.buffer[:1])            
+        if command == 0 or command == 3:
             (ip, port) = struct.unpack("!IH", self.buffer[7:13])
             DestAddress = (utils.int2ip(ip), port)
+            # print(DestAddress)
             if DestAddress != self.address:
                 self.__sendPacket(self.buffer, DestAddress)
                 return
             else:
-                self.__normalPacketReceived(self.buffer[1:])
+                (sourIp, sourPort) = struct.unpack("!IH", self.buffer[1:7])
+                sourceAddress = (utils.int2ip(sourIp),sourPort)
+                if command == 0:
+                    self.__normalPacketReceived(sourceAddress, self.buffer[13:])
+                    self.__sendEcho(sourceAddress)
+                if command == 3:
+                    self.path += self.buffer[1:7]
+                
         elif command == 1:
-            self.__requestPacketReceived(self.buffer[2:])
-        else:
-            self.__responsePacketReceived(self.buffer[2:])
+            self.__requestPacketReceived(self.buffer)
+        elif command == 2:
+            self.__responsePacketReceived(self.buffer)
+            
 
-    def __normalPacketReceived(self, data):
-        self.summit = data[13:]
+    def __listenUDP(self):
+        while(True):
+            self.buffer = self.recvSocket.recv(1024)
+            # print(self.address)
+            # print(self.distanceVector)
+            # print(self.buffer)
+            threading.Thread(target=self.__handleData, args=[self.buffer]).start()
+
+
+
+    def __normalPacketReceived(self, sourceAddress, data):
+        # print(data)
+        self.summitLock.acquire()
+        self.summit += data
+        self.summitLock.release()
+
 
     def __requestPacketReceived(self, data):
         ip, port = struct.unpack("!IH", data[4:10])
         address = (utils.int2ip(ip), port)
+        self.distanceVector.update({address:VectorItem(address, address, 1)})
         self.__sendResponsePacket(address)
 
     def __responsePacketReceived(self, data):
         neighbourVector = {}
+        # print(data)
         sourceIp, sourcePort = struct.unpack("!IH", data[4:10])
         sourceIp = utils.int2ip(sourceIp)
         sourceAddress = (sourceIp, sourcePort)
@@ -125,7 +151,7 @@ class RIPv2(object):
         for i in range(0, len(data), 17):
             DestIp, DestPort, nextHopIp, nextHopPort, metric = struct.unpack("!IHIHB", data[i+4:i+17])
             DestIp = utils.int2ip(DestIp)
-            nextHopIp = utils.int2ip(nextHopPort)
+            nextHopIp = utils.int2ip(nextHopIp)
             item = VectorItem((DestIp, DestPort), (nextHopIp, nextHopPort), metric)
             neighbourVector.update({(DestIp, DestPort):item})
         if(self.neighbourTimer[sourceAddress].isAlive()):
@@ -145,18 +171,28 @@ class RIPv2(object):
 
     def send(self, data, address):
         src = self.address
-        packet = struct.pack("!BHIHIH%ds" % len(data), 0,
+        # print("send... to", address)
+        # data is binary-object
+        packet = struct.pack("!BIHIH%ds" % len(data), 0,
                              utils.ip2int(src[0]), src[1], utils.ip2int(address[0]), address[1], data)
         self.__sendPacket(packet, address)
 
+    def __sendEcho(self, sourceAddress):
+        packet = struct.pack("!BIHIH", 3, utils.ip2int(self.address[0]), self.address[1],
+                                utils.ip2int(sourceAddress[0]), sourceAddress[1])
+        self.__sendPacket(packet, sourceAddress)
+
     def __sendPacket(self, packet, address):
         # determine where to send
-        for item in self.distanceVector:
+        for item in self.distanceVector.values():
             if item.Dest == address:
-                nextHop = (utils.int2ip(item.nextHop[0]), item.nextHop[1])
+                nextHop = item.nextHop
                 break
         s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        s.sendto(packet, nextHop)
+        # print("nextHop",nextHop)
+        # print(packet)
+        tmp = s.sendto(packet, nextHop)
+        # print("tmp = " ,tmp)
         s.close()
 
     def __sendNormalPacket(self, data, address):
@@ -166,7 +202,7 @@ class RIPv2(object):
         self.__sendPacket(packet, address)
 
     def __sendRequestPacket(self, address):
-        packet = struct.pack("!2BHIHHHIHIHIB", 1, self.version, 0, utils.ip2int(self.address[0]), 
+        packet = struct.pack("!2BHIHHHIHIHB", 1, self.version, 0, utils.ip2int(self.address[0]), 
                                 self.address[1], 2, 0, utils.ip2int(address[0]),
                                 address[1], utils.ip2int(self.address[0]), 
                                 self.address[1], 1)
@@ -175,14 +211,39 @@ class RIPv2(object):
     def __sendResponsePacket(self, address):
         packet = struct.pack("!2BHIH", 2, self.version, 0, utils.ip2int(self.address[0]),
                                 self.address[1]) 
-        for item in self.distanceVector:
+        for item in self.distanceVector.values():
             DestIp = utils.ip2int(item.Dest[0])
             DestPort = item.Dest[1]
             nextHopIp = utils.ip2int(item.nextHop[0])
             nextHopPort = item.nextHop[1]
-            packet += struct.pack("!IHIHB", DestIp, DestPort, nextHopIp, nextHopPort, item.metric)
+            packet += struct.pack("!HHIHIHB", 2, 0, DestIp, DestPort, nextHopIp, nextHopPort, item.metric)
         self.__sendPacket(packet, address)
 
-    def __updateVector(self, neighbourVector):
+    # def summit(self):
+        # TODO encapsulation
+        # pass
+
+    def __updateVector(self, neighbour, neighbourVector):
         pass
 
+import time
+if __name__ == '__main__':
+    rip1Address = ("127.0.0.1", 6789)
+    rip2Address = ("127.0.0.1", 6788)
+    rip1 = RIPv2(rip1Address)
+    
+    time.sleep(5)
+    rip1.send(b'\x01', rip2Address)
+    
+    time.sleep(5)
+    # print(rip1.summit)
+    print(struct.unpack("!B",rip1.summit[0:1])[0])
+    print(rip1Address,"->", end="")
+    rip1.summit = rip1.summit[1:]
+    
+    for i in range(0, len(rip1.path), 6):
+        ip, port = struct.unpack("!IH", rip1.path[i:i+6])
+        ip = utils.int2ip(ip)
+        print((ip, port))
+        if(i != len(rip1.path)-6):
+            print("->")
