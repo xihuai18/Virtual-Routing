@@ -9,12 +9,13 @@ ripEAddress = ("127.0.0.1", 6789)
 
 addresses = [ripEAddress, ripBAddress, ripCAddress, ripDAddress]
 
-ripA = RIPv2(ripAAddress)
+filename = input("Input the topology filename: ")
+ripA = RIPv2(ripAAddress, filename)
 time.sleep(2)
 routeGet = []
 while(len(routeGet) < 4):
     for addr in addresses:
         if not addr in routeGet:
-            if(ripA.traceroute(addr)):            
+            if(ripA.traceroute(addr)):
                 routeGet.append(addr)
             time.sleep(1)

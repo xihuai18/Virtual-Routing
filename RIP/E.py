@@ -7,4 +7,5 @@ ripCAddress = ("127.0.0.1", 6787)
 ripDAddress = ("127.0.0.1", 6788)
 ripEAddress = ("127.0.0.1", 6789)
 
-ripE = RIPv2(ripEAddress)
+filename = input("Input the topology filename: ")
+ripE = RIPv2(ripEAddress, filename)
