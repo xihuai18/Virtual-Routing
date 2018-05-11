@@ -43,7 +43,18 @@ Main Reference:[Route Information Protocol](https://en.wikipedia.org/wiki/Routin
 2. Is it necessary to maintain the route table?
 
 ### OSPF
+No explicit status
 
+Package: Hello, LSU, broadcast, normal, traceRoute, echo
 
+Broadcast: RPF
+
+features:
+1. multi-path
+2. tackle with routing loops, using md5
+
+Timers:
+1. hello
+2. dead
 
 ## Centralized

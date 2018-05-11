@@ -30,6 +30,8 @@
 \input{cover}
 \tableofcontents
 \newpage
+\section{RIP} % (fold)
+\label{sec:rip}
 
 \begin{table}[H]
 	\centering
@@ -92,7 +94,7 @@
 \end{table}
 报文项的内容和response表项一致。
 \begin{table}[H]
-	\centeringjj
+	\centering
 	\begin{tabular}{|c|}
 		\hline
 		Command \\
@@ -106,5 +108,138 @@
 	\end{tabular}		
 \end{table}
 其中的源地址和目的地址包含ip和监听端口号。
-% \par 需要特别指明的是当用于广播时，目的ip写的是224.0.0.9。
+TraceRoute报文(count 1 bytes)
+	\begin{table}[H]
+	\centering
+		\begin{tabular}{|c|}
+			\hline
+			Command \\
+			\hline
+			source address \\
+			\hline
+			destination address \\
+			\hline
+			count \\
+			\hline
+		\end{tabular}		
+	\end{table}	
+
+Echo 报文
+	\begin{table}[H]
+	\centering
+		\begin{tabular}{|c|}
+			\hline
+			Command \\
+			\hline
+			source address \\
+			\hline
+			destination address \\
+			\hline
+			local address \\
+			\hline
+		\end{tabular}		
+	\end{table}
+
+% section rip (end)
+
+\section{OSPF} % (fold)
+\label{sec:ospf}
+	Hello 报文。以下的metric项大小为2bytes（一个short变量）。
+	\begin{table}[H]
+	\centering
+		\begin{tabular}{|c|}
+			\hline
+			Command \\
+			\hline
+			Source address \\
+			\hline
+			Metric \\
+			\hline
+			Payload \\
+			\hline
+		\end{tabular}		
+	\end{table}
+	
+	LSU报文。
+	\begin{table}[H]
+	\centering
+		\begin{tabular}{|c|}
+			\hline
+			Command \\
+			\hline
+			Source address \\
+			\hline
+			Destination address \\
+			\hline
+			Metric \\
+			\hline
+			Repeat of last 8 bytes \\
+			\hline
+			$\cdots$ \\
+			\hline
+		\end{tabular}		
+	\end{table}
+
+	广播报文，和LSU报文的区别在于command项不一样。
+	\begin{table}[H]
+	\centering
+		\begin{tabular}{|c|}
+			\hline
+			Command \\
+			\hline
+			Source address \\
+			\hline
+			Destination address \\
+			\hline
+			Metric \\
+			\hline
+			Repeat of last 8 bytes \\
+			\hline
+			$\cdots$ \\
+			\hline
+		\end{tabular}		
+	\end{table}
+	TraceRoute报文(count 2 bytes)
+	\begin{table}[H]
+	\centering
+		\begin{tabular}{|c|}
+			\hline
+			Command \\
+			\hline
+			source address \\
+			\hline
+			destination address \\
+			\hline
+			count \\
+			\hline
+		\end{tabular}		
+	\end{table}	
+
+	Echo 报文
+	\begin{table}[H]
+	\centering
+		\begin{tabular}{|c|}
+			\hline
+			Command \\
+			\hline
+			source address \\
+			\hline
+			destination address \\
+			\hline
+			local address \\
+			\hline
+		\end{tabular}		
+	\end{table}
+	注意command项：
+	\begin{enumerate}
+		\item 普通报文
+		\item hello
+		\item LSU（Link State Update）
+		\item 广播
+		\item traceRoute
+		\item Echo
+	\end{enumerate}
+
+% section ospf (end)
+
 \end{document}
