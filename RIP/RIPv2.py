@@ -23,7 +23,6 @@ class RIPv2(object):
     version = 2
     addrFamily = 2
     tag = 0
-    # boardcastIP = "224.0.0.9"
     topologyFileName = "topo.txt"
     UpdateInterval = 30
     InvalidInterval = 180
@@ -38,7 +37,6 @@ class RIPv2(object):
         self.address = address
         self.buffer = b''
 
-        # self.routeTimer = {}
         self.holddownTimer = {}
         self.neighbour = []
         self.distanceVector = {}
@@ -123,9 +121,6 @@ class RIPv2(object):
     def __listenUDP(self):
         while(True):
             self.buffer = self.recvSocket.recv(1024)
-            # print(self.address)
-            # print(self.distanceVector)
-            # print(self.buffer)
             threading.Thread(target=self.__handleData, args=[self.buffer]).start()
 
 
@@ -173,7 +168,6 @@ class RIPv2(object):
 
     def send(self, data, address):
         src = self.address
-        # print("send... to", address)
         # data is binary-object
         packet = struct.pack("!BIHIH%ds" % len(data), 0,
                              utils.ip2int(src[0]), src[1], utils.ip2int(address[0]), address[1], data)
@@ -186,15 +180,15 @@ class RIPv2(object):
 
     def __sendPacket(self, packet, address):
         # determine where to send
-        for item in self.distanceVector.values():
-            if item.Dest == address:
-                nextHop = item.nextHop
-                break
+        nextHop = None
+        dest = self.distanceVector[address]
+        if(dest.metric != INF):
+            nextHop = dest.nextHop
+        else:
+            print("Destination unreachable")
+            return 
         s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        # print("nextHop",nextHop)
-        # print(packet)
-        tmp = s.sendto(packet, nextHop)
-        # print("tmp = " ,tmp)
+        s.sendto(packet, nextHop)
         s.close()
 
     def __sendVectorPacket(self, vector, address):
@@ -230,9 +224,13 @@ class RIPv2(object):
             responseVector.update({DestAddress:item})
         self.__sendVectorPacket(responseVector, address)
 
-    # def summit(self):
-        # TODO encapsulation
-        # pass
+    def recv(self, buffersize):
+        while(len(self.summit) <= 0):
+            pass
+        size = min(buffersize,len(self.summit))
+        buffer = self.summit[:size]
+        self.summit = self.summit[size:]
+        return buffer
 
     def __removeHolddownTimer(self, DestAddress):
         self.holddownTimer.pop(DestAddress)
@@ -268,14 +266,14 @@ class RIPv2(object):
             for neighbourDest in self.neighbour:
                 self.__sendVectorPacket(triggeredUpdateVector)
 
-import time
 if __name__ == '__main__':
     rip1Address = ("127.0.0.1", 6789)
     rip2Address = ("127.0.0.1", 6788)
+    rip3Address = ("127.0.0.1", 6787)
     rip1 = RIPv2(rip1Address)
     
     time.sleep(5)
-    rip1.send(b'\x01', rip2Address)
+    rip1.send(b'\x01', rip3Address)
     
     time.sleep(5)
     # print(rip1.summit)
