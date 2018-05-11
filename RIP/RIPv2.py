@@ -4,6 +4,7 @@ import threading
 import time
 import struct
 import sys
+import copy
 sys.path.append("../utils/")
 import utils
 
@@ -37,7 +38,7 @@ class RIPv2(object):
         self.address = address
         self.buffer = b''
 
-        self.holddwonTimer = {}
+        self.holddownTimer = {}
         self.neighbour = []
         self.distanceVector = {}
         self.neighbourTimer = {}
@@ -192,6 +193,18 @@ class RIPv2(object):
         s.sendto(packet, nextHop)
         s.close()
 
+    def __sendVectorPacket(self, vector, address):
+        packet = struct.pack("!2BHIH", 2, self.version, 0, utils.ip2int(self.address[0]),
+                             self.address[1])
+        for item in vector.values():
+            DestIp = utils.ip2int(item.Dest[0])
+            DestPort = item.Dest[1]
+            nextHopIp = utils.ip2int(item.nextHop[0])
+            nextHopPort = item.nextHop[1]
+            packet += struct.pack("!HHIHIHB", 2, 0, DestIp,
+                                  DestPort, nextHopIp, nextHopPort, item.metric)
+        self.__sendPacket(packet, address)
+
     def __sendNormalPacket(self, data, address):
         packet = struct.pack("!BIHIH", 0, utils.ip2int(self.address[0]), self.address[1],
                              utils.ip2int(address[0]), address[1])
@@ -206,16 +219,12 @@ class RIPv2(object):
         self.__sendPacket(packet, address)
 
     def __sendResponsePacket(self, address):
-        packet = struct.pack("!2BHIH", 2, self.version, 0, utils.ip2int(self.address[0]),
-                             self.address[1])
-        for item in self.distanceVector.values():
-            DestIp = utils.ip2int(item.Dest[0])
-            DestPort = item.Dest[1]
-            nextHopIp = utils.ip2int(item.nextHop[0])
-            nextHopPort = item.nextHop[1]
-            packet += struct.pack("!HHIHIHB", 2, 0, DestIp,
-                                  DestPort, nextHopIp, nextHopPort, item.metric)
-        self.__sendPacket(packet, address)
+        responseVector = {}
+        for (DestAddress, item) in self.distanceVector.items():
+            if item.nextHop == address:
+                item.metric = INF       # Split-horizon routing with poison reverse
+            responseVector.update({DestAddress: item})
+        self.__sendVectorPacket(responseVector, address)
 
     def recv(self, buffersize):
         while(len(self.summit) <= 0):
@@ -225,8 +234,43 @@ class RIPv2(object):
         self.summit = self.summit[size:]
         return buffer
 
+    def __removeHolddownTimer(self, DestAddress):
+        self.holddownTimer.pop(DestAddress)
+
     def __updateVector(self, neighbour, neighbourVector):
-        pass
+        triggeredUpdateVector = {}
+        DistanceVectorLock.acquire()
+        for (DestAddress, item) in neighbourVector.items():
+            if DestAddress in self.holddownTimer:
+                continue
+            if DestAddress in self.distanceVector:
+                curItem = self.distanceVector[DestAddress]
+                if curItem.nextHop == neighbour:
+                    if curItem.metric < INF and item.metric == INF:
+                        self.distanceVector[DestAddress].metric = INF
+                        triggeredUpdateVector.update(
+                            {DestAddress: self.distanceVector[DestAddress]})
+                        t = threading.Timer(self.HolddownInterval, self.__removeHolddownTimer,
+                                            args=[DestAddress])
+                        self.holddownTimer.update({DestAddress: t})
+                        t.start()
+                    else:
+                        self.distanceVector[
+                            DestAddress].metric = item.metric + 1
+                else:
+                    if curItem.metric > item.metric + 1:
+                        self.distanceVector[
+                            DestAddress].metric = item.metric + 1
+                        self.distanceVector[DestAddress].nextHop = neighbour
+                        # triggeredUpdateVector.update({DestAddress:self.distanceVector[DestAddress]})
+            else:
+                newItem = VectorItem(DestAddress, neighbour,
+                                     min(item.metric + 1, INF))
+                self.distanceVector.update({DestAddress: newItem})
+        DistanceVectorLock.release()
+        if len(triggeredUpdateVector) > 0:
+            for neighbourDest in self.neighbour:
+                self.__sendVectorPacket(triggeredUpdateVector)
 
 if __name__ == '__main__':
     rip1Address = ("127.0.0.1", 6789)
