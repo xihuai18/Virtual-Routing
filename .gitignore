@@ -1,0 +1,4 @@
+.vscode/*
+*/.vs/*
+local_note.md
+*/__pycache__
