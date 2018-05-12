@@ -155,12 +155,10 @@ Echo 报文
 			\hline
 			Metric \\
 			\hline
-			Payload \\
-			\hline
 		\end{tabular}		
 	\end{table}
 	
-	LSU报文。
+	LSU报文（广播报文）。
 	\begin{table}[H]
 	\centering
 		\begin{tabular}{|c|}
@@ -168,6 +166,8 @@ Echo 报文
 			Command \\
 			\hline
 			Source address \\
+			\hline
+			Transmit address \\
 			\hline
 			Destination address \\
 			\hline
@@ -180,25 +180,6 @@ Echo 报文
 		\end{tabular}		
 	\end{table}
 
-	广播报文，和LSU报文的区别在于command项不一样。
-	\begin{table}[H]
-	\centering
-		\begin{tabular}{|c|}
-			\hline
-			Command \\
-			\hline
-			Source address \\
-			\hline
-			Destination address \\
-			\hline
-			Metric \\
-			\hline
-			Repeat of last 8 bytes \\
-			\hline
-			$\cdots$ \\
-			\hline
-		\end{tabular}		
-	\end{table}
 	TraceRoute报文(count 2 bytes)
 	\begin{table}[H]
 	\centering
@@ -231,11 +212,10 @@ Echo 报文
 		\end{tabular}		
 	\end{table}
 	注意command项：
-	\begin{enumerate}
+	\begin{enumerate}[1:]
 		\item 普通报文
 		\item hello
 		\item LSU（Link State Update）
-		\item 广播
 		\item traceRoute
 		\item Echo
 	\end{enumerate}
