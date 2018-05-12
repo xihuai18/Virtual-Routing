@@ -52,8 +52,8 @@ class OSPF(object):
         with open(self.topoFilename, 'r') as fileReader:
             lines = fileReader.readlines()
             for line in lines:
-                terms = line.split(',')
-                sourceAddress = (terms[0], int(terms[1]))
+                items = line.split(',')
+                sourceAddress = (items[0], int(items[1]))
                 if sourceAddress == self.address:
                     for i in range(2, len(items), 3):
                         destAddress = (items[i], int(items[i+1]))
@@ -85,37 +85,41 @@ class OSPF(object):
                              args=[self.buffer]).start()
 
     def __handleData(self, data):
-        command = struct.unpack("!B", data[0:1])
-        if command == 1:
-            # TODO
-            # self.__normalPacketReceived(data[:])
+        (command, ip, port) = struct.unpack("!BIH", data[0:7])
+        sourceAddress = (utils.int2ip(ip), port)
+        if command == 0:
+            self.__normalPacketReceived(sourceAddress, data[:])
+        elif command == 1:
+            self.__helloReceived(sourceAddress, data[7:])
         elif command == 2:
-            # TODO
-            # self.__helloReceived(data[:])
+            self.__LSUReceived(sourceAddress, data[:])
+            (ip, port) = struct.unpack("!BIH", data[7:13])
+            transmitAddress = (utils.int2ip(ip), port)
+            self.__broadcastReceived(transmitAddress, sourceAddress, data)
         elif command == 3:
-            # TODO
-            # self.__LSUReceived(data[:])
-        elif command == 4:
             self.__tracerouteReceived(data)
-        elif command == 5:
-            (ip, port) = struct.unpack("!IH", self.buffer[1:7])
-            sourceAddress = (utils.int2ip(ip), port)
+        elif command == 4:
             if sourceAddress != self.address:
                 self.__sendPacket(data, sourceAddress)
                 return
             else:
                 self.__EchoReceived(data)
 
-    def __normalPacketReceived(self, sourceAddress, data):
+    # entire packet
+    def __normalPacketReceived(self, sourceAddress, packet):
         pass
 
+    # data contains only the metric from sourceAddress
     def __helloReceived(self, sourceAddress, data):
-        # TODO cancel Timer
+        metric = struct.unpack("!H", data)
+        # TODO
         pass
 
+    # entire packet
     def __LSUReceived(self, sourceAddress, data):
         pass
 
+    # entire packet
     def __tracerouteReceived(self, packet):
         (ip, port) = struct.unpack("!IH", packet[1:7])
         sourceAddress = (utils.int2ip(ip), port)
@@ -168,10 +172,17 @@ class OSPF(object):
                     self.__sendLSU(addr, packet)
 
     def recv(self, buffersize):
-        pass
+        while(len(self.summit) <= 0):
+            pass
+        size = min(buffersize, len(self.summit))
+        buffer = self.summit[:size]
+        self.summit = self.summit[size:]
+        return buffer
 
     def send(self, data, address):
-        pass
+        packet = struct.pack("!BIHIH%ds" % len(data), 0,
+                             utils.ip2int(self.address[0]), self.address[1], utils.ip2int(address[0]), address[1], data)
+        self.__sendPacket(packet, address)
 
     def traceroute(self, address):
         # for i in range(1, metric + 1):
