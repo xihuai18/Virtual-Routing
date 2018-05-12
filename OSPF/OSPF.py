@@ -23,7 +23,7 @@ class OSPF(object):
         self.topoFilename = filename
         self.buffer = b''
         self.traceRouteList = []
-        self.neighbour = []
+        self.neighbour = {}
         self.traceRouteResult = {}
         self.distanceVector = {}
         self.neighbourTimer = {}
@@ -31,9 +31,10 @@ class OSPF(object):
         self.recvSocket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self.recvSocket.bind((self.address))
 
-    
+
+ 
     def __begin(self):
-        pass
+        self.__initDistanceVector()
 
     def __initDistanceVector(self):
         pass
