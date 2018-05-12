@@ -58,3 +58,7 @@ Timers:
 2. dead
 
 ## Centralized
+
+### Server
+
+### Client
