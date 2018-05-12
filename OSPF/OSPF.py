@@ -9,6 +9,7 @@ sys.path.append("../utils/")
 import utils
 import json
 
+
 class OSPF(object):
     version = 2
     helloInterval = 30
@@ -18,6 +19,7 @@ class OSPF(object):
     path = {}
     DistanceVectorLock = threading.Lock()
     summitLock = threading.Lock()
+
     def __init__(self, address, filename):
         self.address = address
         self.topoFilename = filename
@@ -31,24 +33,37 @@ class OSPF(object):
         self.recvSocket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self.recvSocket.bind((self.address))
 
-
- 
     def __begin(self):
         self.__initDistanceVector()
         threading.Thread(target=self.__listenUDP).start()
+        # say hello to neighbors
+        for addr in self.neighbour.keys():
+            self.__sendHello(addr)
 
     def __initDistanceVector(self):
-        pass
+        # source neighbor(IP,port) cost ... last 2 terms repeated
+        with open(self.topoFilename, 'r') as fileReader:
+            lines = fileReader.readlines()
+            for line in lines:
+                terms = line.split(',')
+                sourceAddress = (terms[0], int(terms[1]))
+                if sourceAddress == self.address:
+                    for i in range(2, len(items), 3):
+                        destAddress = (items[i], int(items[i+1]))
+                        cost = int(items[i+2])
+                        self.__addNeighbour((destAddress, cost), {})
 
-    def __addNeighbour(self, neighbourItem):
-        pass
+    def __addNeighbour(self, neighbourItem, neighbourLS):
+        self.distanceVector[neighbourItem[0]] = neighbourItem[0]
+        self.neighbour.update({neighbourItem[0]:neighbourItem[1]})
+        
 
     def __removeNeighbour(self, neighbour):
         def __realRemove(self, neighbour):
             self.neighbour.remove(neighbour)
             self.distanceVector.pop(neighbour)
         pass
-    
+
     def __listenUDP(self):
         while True:
             self.buffer = self.recvSocket.recv(1024)
@@ -108,7 +123,7 @@ class OSPF(object):
                                          self.address[0]),
                                      self.address[1])
             self.__sendPacket(EchoPacket, sourceAddress)
-              
+
     def __EchoReceived(self, packet):
         (ip, port) = struct.unpack("!IH", packet[7:13])
         destAddress = (utils.int2ip(ip), port)
@@ -130,18 +145,18 @@ class OSPF(object):
 
     def __broadcastReceived(self, transmitAddress, sourceAddress, data):
         bestHop = self.distanceVector[sourceAddress]
-        #bestHop may be multiple
+        # bestHop may be multiple
         if transmitAddress in bestHop:
             for addr in self.neighbour:
                 if addr != transmitAddress:
                     self.__sendLSU(addr)
-                  
+
     def recv(self, buffersize):
         pass
-              
+
     def send(self, data, address):
         pass
-              
+
     def traceroute(self, address):
         # for i in range(1, metric + 1):
         #     packet = struct.pack("!BIHIHB", 4, utils.ip2int(self.address[0]),
@@ -149,14 +164,14 @@ class OSPF(object):
         #                             address[1], i)
         #     self.__sendPacket(packet, address)
         pass
-              
+
     def __traceRouteExceed(self, dest):
         # if not dest in self.traceRouteList:
         #     print("Traceroute to ", dest, ": Time Limit Exceeded")
         #     self.path.pop(dest)
         #     self.traceRouteResult[dest] = 2
         pass
-            
+
     def __sendPacket(self, packet, address):
         bestHop = None
         # TODO
@@ -171,15 +186,15 @@ class OSPF(object):
 
     def __sendNormalPacket(self, data, address):
         packet = struct.pack("!BIHIH%ds" % (len(data)), 1, utils.ip2int(self.address[0]),
-                                self.address[1], utils.ip2int(address[0]), 
-                                address[1], data)
+                             self.address[1], utils.ip2int(address[0]),
+                             address[1], data)
         self.__sendPacket(packet, address)
 
     def __sendHello(self, address):
         packet = struct.pack("!BIHH", 2, utils.ip2int(self.address[0]),
-                                self.address[1], 1)
+                             self.address[1], 1)
         self.__sendPacket(packet, address)
-              
+
     def __sendLSU(self, address):
         # packet = struct.pack("!BIHIHIH", 3, utils.ip2int(self.address[0]),
         #                         self.address[1], utils.ip2int(transmit address ip ?),
@@ -189,4 +204,3 @@ class OSPF(object):
 
     def __updateVector(self, neighbour, neighbourVector):
         pass
-                  

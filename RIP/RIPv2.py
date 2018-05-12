@@ -152,8 +152,7 @@ class RIPv2(object):
         sourceAddress = (sourceIp, sourcePort)
         data = data[10:]
         for i in range(0, len(data), 17):
-            DestIp, DestPort, nextHopIp, nextHopPort, metric = struct.unpack("!IHIHB", data[
-                                                                             i + 4:i + 17])
+            DestIp, DestPort, nextHopIp, nextHopPort, metric = struct.unpack("!IHIHB", data[i + 4:i + 17])
             DestIp = utils.int2ip(DestIp)
             nextHopIp = utils.int2ip(nextHopIp)
             item = VectorItem((DestIp, DestPort),
