@@ -7,6 +7,7 @@ import sys
 import copy
 sys.path.append("../utils/")
 import utils
+import json
 
 class OSPF(object):
     version = 2
@@ -44,14 +45,39 @@ class OSPF(object):
     def __removeNeighbour(self, neighbour):
         def __realRemove(self, neighbour):
             self.neighbour.remove(neighbour)
-            self.distanceVector.pop(neighbour)
+            # self.distanceVector.pop(neighbour)
+            self.adjMatrix[self.address].pop(neighbour)
+            self.adjMatrix[neighbour].pop(self.address)
+            self.__updateVector()
         pass
     
     def __listenUDP(self):
-        pass
+        while True:
+            self.buffer = self.recvSocket.recv(1024)
+            threading.Thread(target=self.__handleData,
+                             args=[self.buffer]).start()
 
     def __handleData(self, data):
-        pass
+        command = struct.unpack("!B", data[0:1])
+        if command == 1:
+            # TODO
+            # self.__normalPacketReceived(data[:])
+        elif command == 2:
+            # TODO
+            # self.__helloReceived(data[:])
+        elif command == 3:
+            # TODO
+            # self.__LSUReceived(data[:])
+        elif command == 4:
+            self.__tracerouteReceived(data)
+        elif command == 5:
+            (ip, port) = struct.unpack("!IH", self.buffer[1:7])
+            sourceAddress = (utils.int2ip(ip), port)
+            if sourceAddress != self.address:
+                self.__sendPacket(data, sourceAddress)
+                return
+            else:
+                self.__EchoReceived(data)
 
     def __normalPacketReceived(self, sourceAddress, data):
         pass
@@ -63,9 +89,45 @@ class OSPF(object):
         pass
 
     def __tracerouteReceived(self, packet):
-        pass
+        (ip, port) = struct.unpack("!IH", packet[1:7])
+        sourceAddress = (utils.int2ip(ip), port)
+        (ip, port) = struct.unpack("!IH", packet[7:13])
+        destAddress = (utils.int2ip(ip), port)
+        count, = struct.unpack("!B", packet[-1:])
+        count = count - 1
+        if count > 0:
+            packet = packet[0:-1] + struct.pack("!B", count)
+            # packet = struct.pack("!BIHIHB", 4, utils.ip2int(sourceAddress[0]),
+            #                      sourceAddress[1], utils.ip2int(
+            #                          destAddress[0]),
+            #                      destAddress[1], count)
+            self.__sendPacket(packet, destAddress)
+        else:  # send Echo packet
+            EchoPacket = struct.pack("!BIHIHIH", 5, utils.ip2int(sourceAddress[0]),
+                                     sourceAddress[1], utils.ip2int(
+                                         destAddress[0]),
+                                     destAddress[1], utils.ip2int(
+                                         self.address[0]),
+                                     self.address[1])
+            self.__sendPacket(EchoPacket, sourceAddress)
               
     def __EchoReceived(self, packet):
+        (ip, port) = struct.unpack("!IH", packet[7:13])
+        destAddress = (utils.int2ip(ip), port)
+        (ip, port) = struct.unpack("!IH", packet[13:19])
+        pathAddress = (utils.int2ip(ip), port)
+        if destAddress not in self.path:
+            self.path[destAddress] = [pathAddress, ]
+        else:
+            self.path[destAddress].append(pathAddress)
+        if pathAddress == destAddress:  # print the path
+            print("(%s:%d)" % (self.address[0], self.address[1]), end='')
+            for item in self.path[destAddress]:
+                print("->(%s:%d)" % (item[0], item[1]), end='')
+            print("")
+            self.path.pop(destAddress)
+            self.traceRouteList.append(destAddress)
+            self.traceRouteResult[destAddress] = 1
         pass
 
     def __broadcastReceived(self, transmitAddress, sourceAddress, data):
@@ -83,26 +145,48 @@ class OSPF(object):
         pass
               
     def traceroute(self, address):
+        # for i in range(1, metric + 1):
+        #     packet = struct.pack("!BIHIHB", 4, utils.ip2int(self.address[0]),
+        #                             self.address[1], utils.ip2int(address[0]),
+        #                             address[1], i)
+        #     self.__sendPacket(packet, address)
         pass
               
     def __traceRouteExceed(self, dest):
+        # if not dest in self.traceRouteList:
+        #     print("Traceroute to ", dest, ": Time Limit Exceeded")
+        #     self.path.pop(dest)
+        #     self.traceRouteResult[dest] = 2
         pass
             
     def __sendPacket(self, packet, address):
-        pass
+        bestHop = None
+        # TODO
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        s.sendto(packet, bestHop)
+        s.close()
 
     def __broadcast(self):
         for addr in self.neighbour:
             self.__sendLSU(addr)
 
     def __sendNormalPacket(self, data, address):
-        pass
-              
+        packet = struct.pack("!BIHIH%ds" % (len(data)), 1, utils.ip2int(self.address[0]),
+                                self.address[1], utils.ip2int(address[0]), 
+                                address[1], data)
+        self.__sendPacket(packet, address)
+
     def __sendHello(self, address):
-        pass
+        packet = struct.pack("!BIHH", 2, utils.ip2int(self.address[0]),
+                                self.address[1], 1)
+        self.__sendPacket(packet, address)
               
     def __sendLSU(self, address):
-        pass
+        # packet = struct.pack("!BIHIHIH", 3, utils.ip2int(self.address[0]),
+        #                         self.address[1], utils.ip2int(transmit address ip ?),
+        #                         transmit address port ?, utils.ip2int(address[0]),
+        #                         address[1], metric ?)
+        self.__sendPacket(packet, address)
                   
     def __dijkstra(self, neighbour):
         dist = {neighbour:0}
@@ -121,12 +205,13 @@ class OSPF(object):
             for (dest, dist_nd) in self.adjMatrix[nearest_dest]:
                 t.add(dest)
                 if dest not in dist or min_dist + dist_nd < dist[dest]:
-                    dest = min_dist + dist_nd
+                    dist[dest] = min_dist + dist_nd
         return dist
-
-    def __updateVector(self, neighbour, neighbourVector):
+        
+    def __updateVector(self, neighbour=None, neighbourVector=None):
         self.DistanceVectorLock.acquire()
-        self.adjMatrix[neighbour] = neighbourVector
+        if neighbour is not None:
+            self.adjMatrix[neighbour] = neighbourVector
         neighbourDist = {}
         selfDist = {}
         for (nb, dist_nb) in self.neighbour.items():
@@ -134,6 +219,7 @@ class OSPF(object):
             for (dest, dist) in neighbourDist[nb].items():
                 if dest not in selfDist or dist_nb + dist < selfDist[dest]:
                     selfDist[dest] = dist_nb + dist
+        self.distanceVector.clear()
         for dest in selfDist:
             self.distanceVector[dest] = []
         for (nb, dist_nb) in self.neighbour.items():
@@ -142,4 +228,3 @@ class OSPF(object):
                 if selfDist[dest] == dist_nb + dist:
                     self.distanceVector[dest].append(nb)
         self.DistanceVectorLock.release()
-                  
