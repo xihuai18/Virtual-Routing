@@ -40,10 +40,10 @@ class OSPF(object):
     def __addNeighbour(self, neighbourItem):
         pass
 
-    def __removeNeighbour(self, neighubour):
-        def __realRemove(self, neighubour):
-            self.neighbour.remove(neighubour)
-            self.distanceVector.pop(neighubour)
+    def __removeNeighbour(self, neighbour):
+        def __realRemove(self, neighbour):
+            self.neighbour.remove(neighbour)
+            self.distanceVector.pop(neighbour)
         pass
     
     def __listenUDP(self):

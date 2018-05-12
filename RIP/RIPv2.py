@@ -14,7 +14,7 @@ INF = 16
 class VectorItem(object):
 
     def __init__(self, Dest, nextHop, metric):
-        # all is a tulple contain string ip and int port
+        # all is a tuple contain string ip and int port
         self.Dest = Dest
         self.nextHop = nextHop
         self.metric = metric
@@ -76,12 +76,12 @@ class RIPv2(object):
             180, self.__removeNeighbour, args=[neighbourItem.Dest])})
         self.neighbourTimer[neighbourItem.Dest].start()
 
-    def __removeNeighbour(self, neighubour):
-        def __realRemove(self, neighubour):
-            self.neighbour.remove(neighubour)
-            self.distanceVector.pop(neighubour)
-        self.neighbourTimer.pop(neighubour)
-        threading.Timer(60, __realRemove, args=[self, neighubour]).start()
+    def __removeNeighbour(self, neighbour):
+        def __realRemove(self, neighbour):
+            self.neighbour.remove(neighbour)
+            self.distanceVector.pop(neighbour)
+        self.neighbourTimer.pop(neighbour)
+        threading.Timer(60, __realRemove, args=[self, neighbour]).start()
 
     def __multicast(self, command):
         '''
