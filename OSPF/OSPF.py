@@ -75,21 +75,19 @@ class OSPF(object):
                              args=[self.buffer]).start()
 
     def __handleData(self, data):
-        command = struct.unpack("!B", data[0:1])
+        (command, ip, port) = struct.unpack("!BIH", data[0:7])
+        sourceAddress = (utils.int2ip(ip), port)
         if command == 1:
             # TODO
-            # self.__normalPacketReceived(data[:])
+            # self.__normalPacketReceived(sourceAddress, data[:])
         elif command == 2:
-            # TODO
-            # self.__helloReceived(data[:])
+            self.__helloReceived(sourceAddress, data[7:])
         elif command == 3:
             # TODO
             # self.__LSUReceived(data[:])
         elif command == 4:
             self.__tracerouteReceived(data)
         elif command == 5:
-            (ip, port) = struct.unpack("!IH", self.buffer[1:7])
-            sourceAddress = (utils.int2ip(ip), port)
             if sourceAddress != self.address:
                 self.__sendPacket(data, sourceAddress)
                 return
@@ -100,6 +98,8 @@ class OSPF(object):
         pass
 
     def __helloReceived(self, sourceAddress, data):
+        metric = struct.unpack("!H", data)
+        # TODO
         pass
 
     def __LSUReceived(self, sourceAddress, data):
