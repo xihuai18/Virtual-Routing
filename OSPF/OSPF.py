@@ -218,7 +218,6 @@ class OSPF(object):
         self.__sendPacket(packet, address)
 
     def __sendLSU(self, address, packet=None):
-        cost = self.neighbour[address]
         if packet == None:
             packet = struct.pack("!BIHIHH", 2, utils.ip2int(self.address[0]),
                                     self.address[1], utils.ip2int(self.address[0]),
