@@ -8,13 +8,15 @@ import copy
 sys.path.append("../utils/")
 import utils
 import json
+import math
 
 
 class OSPF(object):
     version = 2
     helloInterval = 10
     deadInterval = 60
-    broadcastInterval = 20
+    random.seed(math.ceil(time.time()*207))
+    broadcastInterval = random.randint(20, 30)
     TraceRouteInterval = 5
     summit = b''
     path = {}
@@ -121,17 +123,17 @@ class OSPF(object):
         metric = struct.unpack("!H", data)
         if not sourceAddress in self.neighbour.keys():
             self.__addNeighbour((sourceAddress, metric), {})
-        else :
+        else:
             if self.neighbourTimer[sourceAddress].isAlive():
                 self.neighbourTimer[sourceAddress].cancel()
-                self.neighbourTimer.update({sourceAddress:threading.Timer(self.deadInterval, self.__removeNeighbour, args=[sourceAddress])})
+                self.neighbourTimer.update({sourceAddress: threading.Timer(
+                    self.deadInterval, self.__removeNeighbour, args=[sourceAddress])})
                 self.neighbourTimer[sourceAddress].start()
             else:
-            # if the hello is received simultaneous!!
+                # if the hello is received simultaneous!!
                 while sourceAddress in self.neighbour.keys():
                     pass
                 self.__addNeighbour((sourceAddress, metric), {})
-
 
     # data contains only the neighbour of the sourceAddress
     def __LSUReceived(self, sourceAddress, data):
@@ -149,13 +151,15 @@ class OSPF(object):
         (ip, port, count) = struct.unpack("!IHB", packet[7:13])
         destAddress = (utils.int2ip(ip), port)
         count = count - 1
-        if count > 0 and destAddress != self.address: 
+        if count > 0 and destAddress != self.address:
             packet = packet[0:-1] + struct.pack("!B", count)
             self.__sendPacket(packet, destAddress)
         elif count == 0:  # send Echo packet
             EchoPacket = struct.pack("!BIHIHIH", 4, utils.ip2int(sourceAddress[0]),
-                                     sourceAddress[1], utils.ip2int(destAddress[0]),
-                                     destAddress[1], utils.ip2int(self.address[0]),
+                                     sourceAddress[1], utils.ip2int(
+                                         destAddress[0]),
+                                     destAddress[1], utils.ip2int(
+                                         self.address[0]),
                                      self.address[1])
             self.__sendPacket(EchoPacket, sourceAddress)
 
@@ -202,8 +206,8 @@ class OSPF(object):
     def traceroute(self, address):
         for i in range(1, 32 + 1):
             packet = struct.pack("!BIHIHB", 3, utils.ip2int(self.address[0]),
-                                    self.address[1], utils.ip2int(address[0]),
-                                    address[1], i)
+                                 self.address[1], utils.ip2int(address[0]),
+                                 address[1], i)
             self.__sendPacket(packet, address)
 
     def __hello(self):
@@ -245,13 +249,14 @@ class OSPF(object):
     def __sendLSU(self, address, packet=None):
         if packet == None:
             packet = struct.pack("!BIHIHH", 2, utils.ip2int(self.address[0]),
-                                    self.address[1], utils.ip2int(self.address[0]),
-                                    self.address[1])
+                                 self.address[1], utils.ip2int(
+                                     self.address[0]),
+                                 self.address[1])
             for item in self.neighbour.keys():
                 packet += utils.ip2int(item) + self.neighbour[item]
         else:
             packet = packet[0:7] + struct.pack("!IH", utils.ip2int(self.address[0]),
-                                                    self.address[1]) + packet[13:]
+                                               self.address[1]) + packet[13:]
         self.__sendPacket(packet, address)
 
     def __dijkstra(self, neighbour):
