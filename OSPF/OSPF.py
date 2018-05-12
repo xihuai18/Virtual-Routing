@@ -87,17 +87,17 @@ class OSPF(object):
     def __handleData(self, data):
         (command, ip, port) = struct.unpack("!BIH", data[0:7])
         sourceAddress = (utils.int2ip(ip), port)
-        if command == 1:
+        if command == 0:
             # TODO
             # self.__normalPacketReceived(sourceAddress, data[:])
-        elif command == 2:
+        elif command == 1:
             self.__helloReceived(sourceAddress, data[7:])
-        elif command == 3:
+        elif command == 2:
             # TODO
             # self.__LSUReceived(data[:])
-        elif command == 4:
+        elif command == 3:
             self.__tracerouteReceived(data)
-        elif command == 5:
+        elif command == 4:
             if sourceAddress != self.address:
                 self.__sendPacket(data, sourceAddress)
                 return
@@ -193,11 +193,13 @@ class OSPF(object):
         pass
 
     def __sendPacket(self, packet, address):
-        bestHop = None
-        # TODO check the existence
-        # check whether the list in the dictionary value is empty
+        # check the existence
+        if address not in self.distanceVector:
+            print("Destination unreachable")
+        bestHop = self.distanceVector[address]
+        nextHop = bestHop[random.randint(0, len(bestHop) - 1)]
         s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        s.sendto(packet, bestHop)
+        s.sendto(packet, nextHop)
         s.close()
 
     def __broadcast(self):
@@ -205,21 +207,27 @@ class OSPF(object):
             self.__sendLSU(addr)
 
     def __sendNormalPacket(self, data, address):
-        packet = struct.pack("!BIHIH%ds" % (len(data)), 1, utils.ip2int(self.address[0]),
+        packet = struct.pack("!BIHIH%ds" % (len(data)), 0, utils.ip2int(self.address[0]),
                              self.address[1], utils.ip2int(address[0]),
                              address[1], data)
         self.__sendPacket(packet, address)
 
     def __sendHello(self, address):
-        packet = struct.pack("!BIHH", 2, utils.ip2int(self.address[0]),
+        packet = struct.pack("!BIHH", 1, utils.ip2int(self.address[0]),
                              self.address[1], 1)
         self.__sendPacket(packet, address)
 
-    def __sendLSU(self, address, packet):
-        # packet = struct.pack("!BIHIHIH", 3, utils.ip2int(self.address[0]),
-        #                         self.address[1], utils.ip2int(transmit address ip ?),
-        #                         transmit address port ?, utils.ip2int(address[0]),
-        #                         address[1], metric ?)
+    def __sendLSU(self, address, packet=None):
+        cost = self.neighbour[address]
+        if packet == None:
+            packet = struct.pack("!BIHIHH", 2, utils.ip2int(self.address[0]),
+                                    self.address[1], utils.ip2int(self.address[0]),
+                                    self.address[1])
+            for item in self.neighbour.keys():
+                packet += utils.ip2int(item) + self.neighbour[item]
+        else:
+            packet = packet[0:7] + struct.pack("!IH", utils.ip2int(self.address[0]),
+                                                    self.address[1]) + packet[13:]
         self.__sendPacket(packet, address)
 
     def __dijkstra(self, neighbour):
