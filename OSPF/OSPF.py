@@ -32,13 +32,14 @@ class OSPF(object):
         self.recvSocket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.recvSocket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self.recvSocket.bind((self.address))
+        # dictionary of dictionary
+        self.adjMatrix = {}
 
     def __begin(self):
         self.__initDistanceVector()
         threading.Thread(target=self.__listenUDP).start()
         # say hello to neighbors
-        for addr in self.neighbour.keys():
-            self.__sendHello(addr)
+        self.__hello()
 
     def __initDistanceVector(self):
         # source neighbor(IP,port) cost ... last 2 terms repeated
@@ -55,14 +56,20 @@ class OSPF(object):
 
     def __addNeighbour(self, neighbourItem, neighbourLS):
         self.distanceVector[neighbourItem[0]] = neighbourItem[0]
-        self.neighbour.update({neighbourItem[0]:neighbourItem[1]})
-        
+        self.neighbour.update({neighbourItem[0]: neighbourItem[1]})
+        self.adjMatrix.update({neighbourItem[0]: neighbourLS})
+        self.neighbourTimer.update({neighbourItem[0]: threading.Timer(
+            self.deadInterval, self.__removeNeighbour, args=[neighbourItem[0]])})
+        self.neighbourTimer[neighbourItem[0]].start()
 
     def __removeNeighbour(self, neighbour):
         def __realRemove(self, neighbour):
             self.neighbour.remove(neighbour)
-            self.distanceVector.pop(neighbour)
-        pass
+            self.adjMatrix[self.address].pop(neighbour)
+            self.adjMatrix[neighbour].pop(self.address)
+            self.__updateVector()
+        self.neighbourTimer.pop(neighbour)
+        self.__realRemove(neighbour)
 
     def __listenUDP(self):
         while True:
@@ -165,6 +172,11 @@ class OSPF(object):
         #     self.__sendPacket(packet, address)
         pass
 
+    def __hello(self):
+        for addr in self.neighbour.keys():
+            self.__sendHello(addr)
+        threading.Timer(self.helloInterval, self.__hello)
+
     def __traceRouteExceed(self, dest):
         # if not dest in self.traceRouteList:
         #     print("Traceroute to ", dest, ": Time Limit Exceeded")
@@ -202,5 +214,43 @@ class OSPF(object):
         #                         address[1], metric ?)
         self.__sendPacket(packet, address)
 
-    def __updateVector(self, neighbour, neighbourVector):
-        pass
+    def __dijkstra(self, neighbour):
+        dist = {neighbour: 0}
+        dist.update(self.adjMatrix[neighbour])
+        # s = set([neighbour])
+        t = set(self.adjMatrix[neighbour].keys())
+        while len(t) > 0:
+            min_dist = None
+            nearest_dest = None
+            for dest in t:
+                if min_dist is None or dist[dest] < min_dist:
+                    min_dist = dist[dest]
+                    nearest_dest = dest
+            # s.add(nearest_dest)
+            t.remove(nearest_dest)
+            for (dest, dist_nd) in self.adjMatrix[nearest_dest]:
+                t.add(dest)
+                if dest not in dist or min_dist + dist_nd < dist[dest]:
+                    dist[dest] = min_dist + dist_nd
+        return dist
+
+    def __updateVector(self, neighbour=None, neighbourVector=None):
+        self.DistanceVectorLock.acquire()
+        if neighbour is not None:
+            self.adjMatrix[neighbour] = neighbourVector
+        neighbourDist = {}
+        selfDist = {}
+        for (nb, dist_nb) in self.neighbour.items():
+            neighbourDist[nb] = self.__dijkstra(nb)
+            for (dest, dist) in neighbourDist[nb].items():
+                if dest not in selfDist or dist_nb + dist < selfDist[dest]:
+                    selfDist[dest] = dist_nb + dist
+        self.distanceVector.clear()
+        for dest in selfDist:
+            self.distanceVector[dest] = []
+        for (nb, dist_nb) in self.neighbour.items():
+            nbDist = neighbourDist[nb]
+            for (dest, dist) in nbDist.items():
+                if selfDist[dest] == dist_nb + dist:
+                    self.distanceVector[dest].append(nb)
+        self.DistanceVectorLock.release()
