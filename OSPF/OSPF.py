@@ -67,8 +67,13 @@ class OSPF(object):
     def __EchoReceived(self, packet):
         pass
 
-    def __broadcastReceived(self, sourceAddress, data):
-        pass
+    def __broadcastReceived(self, transmitAddress, sourceAddress, data):
+        bestHop = self.distanceVector[sourceAddress]
+        #bestHop may be multiple
+        if transmitAddress in bestHop:
+            for addr in self.neighbour:
+                if addr != transmitAddress:
+                    self.__sendLSU(addr)
                   
     def recv(self, buffersize):
         pass
@@ -85,8 +90,9 @@ class OSPF(object):
     def __sendPacket(self, packet, address):
         pass
 
-    def __broadcast(self, command=3):
-        pass
+    def __broadcast(self):
+        for addr in self.neighbour:
+            self.__sendLSU(addr)
 
     def __sendNormalPacket(self, data, address):
         pass
