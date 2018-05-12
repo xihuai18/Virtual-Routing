@@ -52,8 +52,8 @@ class OSPF(object):
         with open(self.topoFilename, 'r') as fileReader:
             lines = fileReader.readlines()
             for line in lines:
-                terms = line.split(',')
-                sourceAddress = (terms[0], int(terms[1]))
+                items = line.split(',')
+                sourceAddress = (items[0], int(items[1]))
                 if sourceAddress == self.address:
                     for i in range(2, len(items), 3):
                         destAddress = (items[i], int(items[i+1]))
@@ -88,13 +88,19 @@ class OSPF(object):
         (command, ip, port) = struct.unpack("!BIH", data[0:7])
         sourceAddress = (utils.int2ip(ip), port)
         if command == 0:
-            # TODO
-            # self.__normalPacketReceived(sourceAddress, data[:])
+            (ip, port) = struct.unpack("!IH", data[7:13])
+            destAddress = (utils.int2ip(ip), port)
+            if destAddress != self.address:
+                self.__sendPacket(data, destAddress)
+                return
+            self.__normalPacketReceived(sourceAddress, data[13:])
         elif command == 1:
             self.__helloReceived(sourceAddress, data[7:])
         elif command == 2:
-            # TODO
-            # self.__LSUReceived(data[:])
+            self.__LSUReceived(sourceAddress, data[13:])
+            (ip, port) = struct.unpack("!BIH", data[7:13])
+            transmitAddress = (utils.int2ip(ip), port)
+            self.__broadcastReceived(transmitAddress, sourceAddress, data)
         elif command == 3:
             self.__tracerouteReceived(data)
         elif command == 4:
@@ -104,37 +110,52 @@ class OSPF(object):
             else:
                 self.__EchoReceived(data)
 
-    def __normalPacketReceived(self, sourceAddress, data):
-        pass
+    # data contains only the data of the normal packet
+    def __normalPacketReceived(self, data):
+        self.summitLock.acquire()
+        self.summit += data
+        self.summitLock.release()
 
+    # data contains only the metric from sourceAddress
     def __helloReceived(self, sourceAddress, data):
         metric = struct.unpack("!H", data)
-        # TODO
-        pass
+        if not sourceAddress in self.neighbour.keys():
+            self.__addNeighbour((sourceAddress, metric), {})
+        else :
+            if self.neighbourTimer[sourceAddress].isAlive():
+                self.neighbourTimer[sourceAddress].cancel()
+                self.neighbourTimer.update({sourceAddress:threading.Timer(self.deadInterval, self.__removeNeighbour, args=[sourceAddress])})
+                self.neighbourTimer[sourceAddress].start()
+            else:
+            # if the hello is received simultaneous!!
+                while sourceAddress in self.neighbour.keys():
+                    pass
+                self.__addNeighbour((sourceAddress, metric), {})
 
+
+    # data contains only the neighbour of the sourceAddress
     def __LSUReceived(self, sourceAddress, data):
-        pass
+        sourceAddressNeighbour = {}
+        for i in range(0, len(data), 8):
+            (ip, port, metric) = struct.unpack("!IHH", data[i:i+8])
+            address = (utils.int2ip(ip), port)
+            sourceAddressNeighbour.update({address: metric})
+        self.__updateVector(sourceAddress, sourceAddressNeighbour)
 
+    # entire packet
     def __tracerouteReceived(self, packet):
         (ip, port) = struct.unpack("!IH", packet[1:7])
         sourceAddress = (utils.int2ip(ip), port)
-        (ip, port) = struct.unpack("!IH", packet[7:13])
+        (ip, port, count) = struct.unpack("!IHB", packet[7:13])
         destAddress = (utils.int2ip(ip), port)
-        count, = struct.unpack("!B", packet[-1:])
         count = count - 1
-        if count > 0:
+        if count > 0 and destAddress != self.address: 
             packet = packet[0:-1] + struct.pack("!B", count)
-            # packet = struct.pack("!BIHIHB", 4, utils.ip2int(sourceAddress[0]),
-            #                      sourceAddress[1], utils.ip2int(
-            #                          destAddress[0]),
-            #                      destAddress[1], count)
             self.__sendPacket(packet, destAddress)
-        else:  # send Echo packet
-            EchoPacket = struct.pack("!BIHIHIH", 5, utils.ip2int(sourceAddress[0]),
-                                     sourceAddress[1], utils.ip2int(
-                                         destAddress[0]),
-                                     destAddress[1], utils.ip2int(
-                                         self.address[0]),
+        elif count == 0:  # send Echo packet
+            EchoPacket = struct.pack("!BIHIHIH", 4, utils.ip2int(sourceAddress[0]),
+                                     sourceAddress[1], utils.ip2int(destAddress[0]),
+                                     destAddress[1], utils.ip2int(self.address[0]),
                                      self.address[1])
             self.__sendPacket(EchoPacket, sourceAddress)
 
@@ -155,7 +176,6 @@ class OSPF(object):
             self.path.pop(destAddress)
             self.traceRouteList.append(destAddress)
             self.traceRouteResult[destAddress] = 1
-        pass
 
     def __broadcastReceived(self, transmitAddress, sourceAddress, packet):
         bestHop = self.distanceVector[sourceAddress]
@@ -167,18 +187,24 @@ class OSPF(object):
                     self.__sendLSU(addr, packet)
 
     def recv(self, buffersize):
-        pass
+        while(len(self.summit) <= 0):
+            pass
+        size = min(buffersize, len(self.summit))
+        buffer = self.summit[:size]
+        self.summit = self.summit[size:]
+        return buffer
 
     def send(self, data, address):
-        pass
+        packet = struct.pack("!BIHIH%ds" % len(data), 0,
+                             utils.ip2int(self.address[0]), self.address[1], utils.ip2int(address[0]), address[1], data)
+        self.__sendPacket(packet, address)
 
     def traceroute(self, address):
-        # for i in range(1, metric + 1):
-        #     packet = struct.pack("!BIHIHB", 4, utils.ip2int(self.address[0]),
-        #                             self.address[1], utils.ip2int(address[0]),
-        #                             address[1], i)
-        #     self.__sendPacket(packet, address)
-        pass
+        for i in range(1, 32 + 1):
+            packet = struct.pack("!BIHIHB", 3, utils.ip2int(self.address[0]),
+                                    self.address[1], utils.ip2int(address[0]),
+                                    address[1], i)
+            self.__sendPacket(packet, address)
 
     def __hello(self):
         for addr in self.neighbour.keys():
@@ -186,11 +212,10 @@ class OSPF(object):
         threading.Timer(self.helloInterval, self.__hello)
 
     def __traceRouteExceed(self, dest):
-        # if not dest in self.traceRouteList:
-        #     print("Traceroute to ", dest, ": Time Limit Exceeded")
-        #     self.path.pop(dest)
-        #     self.traceRouteResult[dest] = 2
-        pass
+        if not dest in self.traceRouteList:
+            print("Traceroute to ", dest, ": Time Limit Exceeded")
+            self.path.pop(dest)
+            self.traceRouteResult[dest] = 2
 
     def __sendPacket(self, packet, address):
         # check the existence
