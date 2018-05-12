@@ -12,8 +12,9 @@ import json
 
 class OSPF(object):
     version = 2
-    helloInterval = 30
-    deadInterval = 180
+    helloInterval = 10
+    deadInterval = 60
+    broadcastInterval = 20
     TraceRouteInterval = 5
     summit = b''
     path = {}
@@ -25,7 +26,7 @@ class OSPF(object):
         self.topoFilename = filename
         self.buffer = b''
         self.traceRouteList = []
-        self.neighbour = {}
+        self.neighbour = {}  # address:cost
         self.traceRouteResult = {}
         self.distanceVector = {}
         self.neighbourTimer = {}
@@ -36,10 +37,15 @@ class OSPF(object):
         self.adjMatrix = {}
 
     def __begin(self):
+        def __broadcastAndTimer(self):
+            self.__broadcast()
+            threading.Timer(self.broadcastInterval,
+                            __broadcastAndTimer, args=[self]).start()
         self.__initDistanceVector()
         threading.Thread(target=self.__listenUDP).start()
         # say hello to neighbors
         self.__hello()
+        __broadcastAndTimer(self)
 
     def __initDistanceVector(self):
         # source neighbor(IP,port) cost ... last 2 terms repeated
@@ -59,7 +65,8 @@ class OSPF(object):
         self.neighbour.update({neighbourItem[0]: neighbourItem[1]})
         self.adjMatrix.update({neighbourItem[0]: neighbourLS})
         self.neighbourTimer.update({neighbourItem[0]: threading.Timer(
-            self.deadInterval, self.__removeNeighbour, args=[neighbourItem[0]])})
+            self.deadInterval, self.__removeNeighbour,
+            args=[neighbourItem[0]])})
         self.neighbourTimer[neighbourItem[0]].start()
 
     def __removeNeighbour(self, neighbour):
@@ -69,7 +76,7 @@ class OSPF(object):
             self.adjMatrix[neighbour].pop(self.address)
             self.__updateVector()
         self.neighbourTimer.pop(neighbour)
-        self.__realRemove(neighbour)
+        __realRemove(self, neighbour)
 
     def __listenUDP(self):
         while True:
@@ -103,6 +110,7 @@ class OSPF(object):
         pass
 
     def __helloReceived(self, sourceAddress, data):
+        # TODO cancel Timer
         pass
 
     def __LSUReceived(self, sourceAddress, data):
@@ -150,13 +158,14 @@ class OSPF(object):
             self.traceRouteResult[destAddress] = 1
         pass
 
-    def __broadcastReceived(self, transmitAddress, sourceAddress, data):
+    def __broadcastReceived(self, transmitAddress, sourceAddress, packet):
         bestHop = self.distanceVector[sourceAddress]
+        # Reverse Path First
         # bestHop may be multiple
         if transmitAddress in bestHop:
             for addr in self.neighbour:
                 if addr != transmitAddress:
-                    self.__sendLSU(addr)
+                    self.__sendLSU(addr, packet)
 
     def recv(self, buffersize):
         pass
@@ -186,7 +195,7 @@ class OSPF(object):
 
     def __sendPacket(self, packet, address):
         bestHop = None
-        # TODO
+        # TODO check the existence
         # check whether the list in the dictionary value is empty
         s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         s.sendto(packet, bestHop)
@@ -207,7 +216,7 @@ class OSPF(object):
                              self.address[1], 1)
         self.__sendPacket(packet, address)
 
-    def __sendLSU(self, address):
+    def __sendLSU(self, address, packet):
         # packet = struct.pack("!BIHIHIH", 3, utils.ip2int(self.address[0]),
         #                         self.address[1], utils.ip2int(transmit address ip ?),
         #                         transmit address port ?, utils.ip2int(address[0]),
