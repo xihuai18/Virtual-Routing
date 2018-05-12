@@ -35,6 +35,7 @@ class OSPF(object):
  
     def __begin(self):
         self.__initDistanceVector()
+        threading.Thread(target=self.__listenUDP).start()
 
     def __initDistanceVector(self):
         pass
@@ -159,6 +160,7 @@ class OSPF(object):
     def __sendPacket(self, packet, address):
         bestHop = None
         # TODO
+        # check whether the list in the dictionary value is empty
         s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         s.sendto(packet, bestHop)
         s.close()
