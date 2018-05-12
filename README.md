@@ -60,5 +60,26 @@ Timers:
 ## Centralized
 
 ### Server
++ connect with routers 
++ receive the LS from routers
++ execute the Floyd algorithm
++ send the corresponding forwarding table to each router
+
+How to connect the routers?
+1. routers send connecting packet periodically
+2. set a dead interval
+How to store the map?
++ Just like that in OSPF
+
+How to send the forwarding table?
++ Triggered update and periodically
+
+Using Twisted!
 
 ### Client
++ connect with the server
++ send the LS to the server
++ receive the forwarding from the server
+
+How to connect to the server?
++ periodically and at the beginning

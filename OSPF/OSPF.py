@@ -88,11 +88,16 @@ class OSPF(object):
         (command, ip, port) = struct.unpack("!BIH", data[0:7])
         sourceAddress = (utils.int2ip(ip), port)
         if command == 0:
-            self.__normalPacketReceived(sourceAddress, data[:])
+            (ip, port) = struct.unpack("!IH", data[7:13])
+            destAddress = (utils.int2ip(ip), port)
+            if destAddress != self.address:
+                self.__sendPacket(data, destAddress)
+                return
+            self.__normalPacketReceived(sourceAddress, data[13:])
         elif command == 1:
             self.__helloReceived(sourceAddress, data[7:])
         elif command == 2:
-            self.__LSUReceived(sourceAddress, data[:])
+            self.__LSUReceived(sourceAddress, data[13:])
             (ip, port) = struct.unpack("!BIH", data[7:13])
             transmitAddress = (utils.int2ip(ip), port)
             self.__broadcastReceived(transmitAddress, sourceAddress, data)
@@ -105,41 +110,52 @@ class OSPF(object):
             else:
                 self.__EchoReceived(data)
 
-    # entire packet
-    def __normalPacketReceived(self, sourceAddress, packet):
-        pass
+    # data contains only the data of the normal packet
+    def __normalPacketReceived(self, data):
+        self.summitLock.acquire()
+        self.summit += data
+        self.summitLock.release()
 
     # data contains only the metric from sourceAddress
     def __helloReceived(self, sourceAddress, data):
         metric = struct.unpack("!H", data)
-        # TODO
-        pass
+        if not sourceAddress in self.neighbour.keys():
+            self.__addNeighbour((sourceAddress, metric), {})
+        else :
+            if self.neighbourTimer[sourceAddress].isAlive():
+                self.neighbourTimer[sourceAddress].cancel()
+                self.neighbourTimer.update({sourceAddress:threading.Timer(self.deadInterval, self.__removeNeighbour, args=[sourceAddress])})
+                self.neighbourTimer[sourceAddress].start()
+            else:
+            # if the hello is received simultaneous!!
+                while sourceAddress in self.neighbour.keys():
+                    pass
+                self.__addNeighbour((sourceAddress, metric), {})
 
-    # entire packet
+
+    # data contains only the neighbour of the sourceAddress
     def __LSUReceived(self, sourceAddress, data):
-        pass
+        sourceAddressNeighbour = {}
+        for i in range(0, len(data), 8):
+            (ip, port, metric) = struct.unpack("!IHH", data[i:i+8])
+            address = (utils.int2ip(ip), port)
+            sourceAddressNeighbour.update({address: metric})
+        self.__updateVector(sourceAddress, sourceAddressNeighbour)
 
     # entire packet
     def __tracerouteReceived(self, packet):
         (ip, port) = struct.unpack("!IH", packet[1:7])
         sourceAddress = (utils.int2ip(ip), port)
-        (ip, port) = struct.unpack("!IH", packet[7:13])
+        (ip, port, count) = struct.unpack("!IHB", packet[7:13])
         destAddress = (utils.int2ip(ip), port)
-        count, = struct.unpack("!B", packet[-1:])
         count = count - 1
-        if count > 0:
+        if count > 0 and destAddress != self.address: 
             packet = packet[0:-1] + struct.pack("!B", count)
-            # packet = struct.pack("!BIHIHB", 4, utils.ip2int(sourceAddress[0]),
-            #                      sourceAddress[1], utils.ip2int(
-            #                          destAddress[0]),
-            #                      destAddress[1], count)
             self.__sendPacket(packet, destAddress)
-        else:  # send Echo packet
-            EchoPacket = struct.pack("!BIHIHIH", 5, utils.ip2int(sourceAddress[0]),
-                                     sourceAddress[1], utils.ip2int(
-                                         destAddress[0]),
-                                     destAddress[1], utils.ip2int(
-                                         self.address[0]),
+        elif count == 0:  # send Echo packet
+            EchoPacket = struct.pack("!BIHIHIH", 4, utils.ip2int(sourceAddress[0]),
+                                     sourceAddress[1], utils.ip2int(destAddress[0]),
+                                     destAddress[1], utils.ip2int(self.address[0]),
                                      self.address[1])
             self.__sendPacket(EchoPacket, sourceAddress)
 
@@ -160,7 +176,6 @@ class OSPF(object):
             self.path.pop(destAddress)
             self.traceRouteList.append(destAddress)
             self.traceRouteResult[destAddress] = 1
-        pass
 
     def __broadcastReceived(self, transmitAddress, sourceAddress, packet):
         bestHop = self.distanceVector[sourceAddress]
@@ -185,12 +200,11 @@ class OSPF(object):
         self.__sendPacket(packet, address)
 
     def traceroute(self, address):
-        # for i in range(1, metric + 1):
-        #     packet = struct.pack("!BIHIHB", 4, utils.ip2int(self.address[0]),
-        #                             self.address[1], utils.ip2int(address[0]),
-        #                             address[1], i)
-        #     self.__sendPacket(packet, address)
-        pass
+        for i in range(1, 32 + 1):
+            packet = struct.pack("!BIHIHB", 3, utils.ip2int(self.address[0]),
+                                    self.address[1], utils.ip2int(address[0]),
+                                    address[1], i)
+            self.__sendPacket(packet, address)
 
     def __hello(self):
         for addr in self.neighbour.keys():
@@ -198,18 +212,19 @@ class OSPF(object):
         threading.Timer(self.helloInterval, self.__hello)
 
     def __traceRouteExceed(self, dest):
-        # if not dest in self.traceRouteList:
-        #     print("Traceroute to ", dest, ": Time Limit Exceeded")
-        #     self.path.pop(dest)
-        #     self.traceRouteResult[dest] = 2
-        pass
+        if not dest in self.traceRouteList:
+            print("Traceroute to ", dest, ": Time Limit Exceeded")
+            self.path.pop(dest)
+            self.traceRouteResult[dest] = 2
 
     def __sendPacket(self, packet, address):
-        bestHop = None
-        # TODO check the existence
-        # check whether the list in the dictionary value is empty
+        # check the existence
+        if address not in self.distanceVector:
+            print("Destination unreachable")
+        bestHop = self.distanceVector[address]
+        nextHop = bestHop[random.randint(0, len(bestHop) - 1)]
         s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        s.sendto(packet, bestHop)
+        s.sendto(packet, nextHop)
         s.close()
 
     def __broadcast(self):
@@ -217,21 +232,26 @@ class OSPF(object):
             self.__sendLSU(addr)
 
     def __sendNormalPacket(self, data, address):
-        packet = struct.pack("!BIHIH%ds" % (len(data)), 1, utils.ip2int(self.address[0]),
+        packet = struct.pack("!BIHIH%ds" % (len(data)), 0, utils.ip2int(self.address[0]),
                              self.address[1], utils.ip2int(address[0]),
                              address[1], data)
         self.__sendPacket(packet, address)
 
     def __sendHello(self, address):
-        packet = struct.pack("!BIHH", 2, utils.ip2int(self.address[0]),
+        packet = struct.pack("!BIHH", 1, utils.ip2int(self.address[0]),
                              self.address[1], 1)
         self.__sendPacket(packet, address)
 
-    def __sendLSU(self, address, packet):
-        # packet = struct.pack("!BIHIHIH", 3, utils.ip2int(self.address[0]),
-        #                         self.address[1], utils.ip2int(transmit address ip ?),
-        #                         transmit address port ?, utils.ip2int(address[0]),
-        #                         address[1], metric ?)
+    def __sendLSU(self, address, packet=None):
+        if packet == None:
+            packet = struct.pack("!BIHIHH", 2, utils.ip2int(self.address[0]),
+                                    self.address[1], utils.ip2int(self.address[0]),
+                                    self.address[1])
+            for item in self.neighbour.keys():
+                packet += utils.ip2int(item) + self.neighbour[item]
+        else:
+            packet = packet[0:7] + struct.pack("!IH", utils.ip2int(self.address[0]),
+                                                    self.address[1]) + packet[13:]
         self.__sendPacket(packet, address)
 
     def __dijkstra(self, neighbour):
