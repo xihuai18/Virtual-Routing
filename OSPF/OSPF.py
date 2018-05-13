@@ -111,8 +111,11 @@ class OSPF(object):
                 md5Lock.acquire()
                 if md5 not in self.forwardPacket:
                     self.__sendPacket(data, destAddress)
-                    self.forwardPacketIndex = (self.forwardPacketIndex + 1) % 5
-                    self.forwardPacket[self.forwardPacketIndex] = md5
+                    if len(self.forwardPacket) < 5:
+                        self.forwardPacket.append(md5)
+                    else:
+                        self.forwardPacket[self.forwardPacketIndex] = md5
+                        self.forwardPacketIndex = (self.forwardPacketIndex + 1) % 5
                 md5Lock.release()
                 return
             elif destAddress == self.address:
