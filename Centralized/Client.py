@@ -32,7 +32,8 @@ class Client(object):
         self.recvSocket.bind((self.address))
 
     def __begin(self):
-        pass
+        self.__hello()
+        self.__sendLSToServer()
 
     def __initNeighbour(self):
         pass
@@ -50,7 +51,7 @@ class Client(object):
     def __sendHello(self, address):
         pass
 
-    def __hello(self, address):
+    def __hello(self):
         pass
 
     def __sendPacket(self, address):
