@@ -11,6 +11,7 @@ import json
 
 from twisted.internet.protocol import DatagramProtocol
 from twisted.internet import reactor
+from twisted.internet import task
 
 
 class ServerProtocol(DatagramProtocol):
@@ -32,7 +33,7 @@ class ServerProtocol(DatagramProtocol):
 
     def datagramReceived(self, recvPacket, recvAddr):
         command = struct.unpack("!B", recvPacket[0:1])
-        if command == 2: # LS
+        if command == 2:  # LS
             (ip, port) = struct.unpack("!IH", recvPacket[1:7])
             client = (utils.int2ip(ip), port)
             self.__LSReceived(client, recvPacket[7:])
@@ -46,18 +47,18 @@ class ServerProtocol(DatagramProtocol):
         self.__updateVector(client, neighbourVector)
         if client in self.callLaterHandles:
             self.callLaterHandles[client].cancel()
-        self.callLaterHandles[client] = self.reactor.callLater(self.DEADINTERVAL, 
-                                                                self.__removeClient,
-                                                                args=[client])
+        self.callLaterHandles[client] = self.reactor.callLater(self.DEADINTERVAL,
+                                                               self.__removeClient,
+                                                               args=[client])
 
     def __sendForwardTable(self):
         # send forwarding tables to all the neighbours
         for client in self.map:
             packet = struct.pack('!B', 3)
             for item in self.nextHopForRouters[client].items():
-                packet += struct.pack("!IHIH", utils.ip2int(item[0][0]), 
-                                            item[0][1], utils.ip2int(item[1][0]),
-                                            item[1][1])
+                packet += struct.pack("!IHIH", utils.ip2int(item[0][0]),
+                                      item[0][1], utils.ip2int(item[1][0]),
+                                      item[1][1])
             self.transport.write(packet, client)
 
     def __updateVector(self, client, neighbourVector):
@@ -92,11 +93,30 @@ class ServerProtocol(DatagramProtocol):
             route.append(node)
         return route
 
-SERVER_PORT = 999
+
+def printRoute(server):
+    routers = server.map.keys()
+    for source in routers:
+        for dest in routers:
+            if source != dest:
+                route = server.getRoute(source, dest)
+                if route is None:
+                    print("Nonexistent path")
+                else:
+                    for router in route[0:-1]:
+                        print(router, end="->")
+                    print(route[-1])
+
+
+SERVER_PORT = 51000
+
 
 def main():
-    reactor.listenUDP(SERVER_PORT, ServerProtocol)
+    server = ServerProtocol(("127.0.0.1", SERVER_PORT), reactor)
+    reactor.listenUDP(SERVER_PORT, server)
+    task.LoopingCall(printRoute, [server]).start(5)
     reactor.run()
+
 
 if __name__ == '__main__':
     main()
