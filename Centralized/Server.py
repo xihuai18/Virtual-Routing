@@ -32,8 +32,8 @@ class ServerProtocol(DatagramProtocol):
         self.callLaterHandles.pop(client)
 
     def datagramReceived(self, data, addr):
-        print(data)
-        command = struct.unpack("!B", data[0:1])
+        # print(data)
+        command, = struct.unpack("!B", data[0:1])
         if command == 2:  # LS
             (ip, port) = struct.unpack("!IH", data[1:7])
             client = (utils.int2ip(ip), port)
@@ -47,7 +47,8 @@ class ServerProtocol(DatagramProtocol):
             neighbourVector[destAddress] = metric
         self.__updateVector(client, neighbourVector)
         if client in self.callLaterHandles:
-            self.callLaterHandles[client].cancel()
+            if self.callLaterHandles[client].active():
+                self.callLaterHandles[client].cancel()
         self.callLaterHandles[client] = self.reactor.callLater(self.DEADINTERVAL,
                                                                self.__removeClient,
                                                                args=[client])
@@ -96,18 +97,20 @@ class ServerProtocol(DatagramProtocol):
 
 
 def printRoute(server):
-    for (source, LS) in server.map.items():
-        print(source)
-        print(LS)
+    # for (source, LS) in server.map.items():
+    #     print(source)
+    #     print(LS)
             
     routers = server.map.keys()
-    print("Printing")
+    # print("Printing")
     for source in routers:
         for dest in routers:
             if source != dest:
                 route = server.getRoute(source, dest)
                 if route is None:
+                    print(source, dest)
                     print("Nonexistent path")
+                    print("")
                 else:
                     for router in route[0:-1]:
                         print(router, end="->")

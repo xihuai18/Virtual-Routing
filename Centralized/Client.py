@@ -54,6 +54,7 @@ class Client(object):
     def __addNeighbour(self, neighbourItem):
         # SET TIMER
         self.neighbour.update({neighbourItem[0]: neighbourItem[1]})
+        self.forwardTable.update({neighbourItem[0]:neighbourItem[0]})
         self.neighbourTimer.update({neighbourItem[0]: threading.Timer(
             self.DEADLINE, self.__removeNeighbour,
             args=[neighbourItem[0]])})
@@ -90,8 +91,8 @@ class Client(object):
         for addr, cost in self.neighbour.items():
             packet += struct.pack("!IHH", utils.ip2int(
                 addr[0]), addr[1], cost)
-        for addr, cost in self.neighbour.items():
-            print(addr, cost)
+        # for addr, cost in self.neighbour.items():
+            # print(addr, cost)
         self.__sendPacket(packet, address)
         
 
@@ -112,10 +113,15 @@ class Client(object):
         threading.Timer(self.HELLOINTERVAL, self.__hello).start()
 
     def __sendPacket(self, packet, address):
-        if address not in self.forwardTable:
+        nextHop = None
+        if address == self.serverAddress:
+            nextHop = address
+        elif address not in self.forwardTable:
+            print(address)
             print("Destination unreachable")
             return
-        nextHop = self.forwardTable[address]
+        else:
+            nextHop = self.forwardTable[address]
         s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         s.sendto(packet, nextHop)
         s.close()
@@ -130,13 +136,14 @@ class Client(object):
             if self.neighbourTimer[sourceAddress].isAlive():
                 self.neighbourTimer[sourceAddress].cancel()
                 self.neighbourTimer.update({sourceAddress: threading.Timer(
-                    self.deadInterval, self.__removeNeighbour, args=[sourceAddress])})
+                    self.DEADLINE, self.__removeNeighbour, args=[sourceAddress])})
                 self.neighbourTimer[sourceAddress].start()
             else:
                 # if the hello is received simultaneous!!
                 while sourceAddress in self.neighbour.keys():
                     pass
                 self.__addNeighbour((sourceAddress, metric))
+        print(self.neighbour)
 
     # payload is put in data
     def __normalPacketReceived(self, data):
