@@ -116,7 +116,7 @@ class Client(object):
 
     # metric only
     def __helloReceived(self, sourceAddress, data):
-        metric = struct.unpack("!H", data)
+        metric, = struct.unpack("!H", data)
         self.neighbour.update({sourceAddress: metric})
         if sourceAddress not in self.neighbour:
             self.__addNeighbour((sourceAddress, metric))
