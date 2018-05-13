@@ -1,0 +1,142 @@
+\section{RIP} % (fold)
+\label{sec:rip}
+	\subsection{协议概述} % (fold)
+	\label{sub:协议概述}
+	
+	% subsection 协议概述 (end)
+	\subsection{算法} % (fold)
+	\label{sub:算法}
+	
+	% subsection 算法 (end)
+	\subsection{协议特性} % (fold)
+	\label{sub:协议特性}
+	
+	% subsection 协议特性 (end)
+	\subsection{报文格式} % (fold)
+	\label{sub:报文格式}
+	
+	% subsection 报文格式 (end)
+	\subsection{协议扩展} % (fold)
+	\label{sub:协议扩展}
+	
+	% subsection 协议扩展 (end)
+	\subsection{协议实现} % (fold)
+	\label{sub:协议实现}
+	
+	% subsection 协议实现 (end)
+	\subsection{结果} % (fold)
+	\label{sub:结果}
+	
+	% subsection 结果 (end)
+	\subsection{总结} % (fold)
+	\label{sub:总结}
+	
+	% subsection 总结 (end)
+\begin{table}[H]
+	\centering
+	\begin{tabular}{|c|}
+		\hline
+		Command \; \vline \; Version \; \vline \; Routing domain \; \\
+		\hline
+		Source address \\
+		\hline
+		Address family \; \vline \; Route tag \; \\
+		\hline
+		address \\
+		\hline
+		Next hop \\
+		\hline
+		metric \\
+		\hline
+		repeat of last 17 bytes \\
+		\hline
+		$\cdots$ \\
+		\hline 
+	\end{tabular}	
+\end{table}
+报文项解释：
+\begin{enumerate}
+	\item Command（1 Byte）：指明这条报文的类型。
+	\begin{enumerate}[]
+		\item 0：普通报文。
+		\item 1：请求报文。
+		\item 2：响应（包含路由表）报文。
+		% \item 3：广播request。
+		% \item 4：广播response。
+	\end{enumerate}
+	\item Version（1 Byte）：RIP协议的版本。
+	\item Routing domain（2 Bytes）：指明这是RIP中的哪一步。
+	\item Source address（6 Bytes）：指明发送方的源地址和监听端口。
+	\item Address family（2 Bytes）：使用什么作为地址，使用IP该项为2。
+	\item Route tag（2 Bytes）：本项目中不用。
+	\item address（6 Bytes）：ip和端口号。
+	\item Next hop（6 Bytes）：下一跳路由的ip和端口。
+	\item matric（1 Bytes）：代价度量（跳数）。
+\end{enumerate}
+\begin{table}[H]
+	\centering
+	\begin{tabular}{|c|}
+		\hline
+		Command \; \vline \; Version \; \vline \; Routing domain \; \\
+		\hline
+		Source address \\
+		\hline
+		Address family \; \vline \; Route tag \; \\
+		\hline
+		address \\
+		\hline
+		Next hop \\
+		\hline
+		metric \\
+		\hline
+	\end{tabular}
+\end{table}
+报文项的内容和response表项一致。
+\begin{table}[H]
+	\centering
+	\begin{tabular}{|c|}
+		\hline
+		Command \\
+		\hline
+		source address \\
+		\hline
+		destination address \\
+		\hline
+		payload \\
+		\hline
+	\end{tabular}		
+\end{table}
+其中的源地址和目的地址包含ip和监听端口号。
+TraceRoute报文(count 1 bytes)
+	\begin{table}[H]
+	\centering
+		\begin{tabular}{|c|}
+			\hline
+			Command \\
+			\hline
+			source address \\
+			\hline
+			destination address \\
+			\hline
+			count \\
+			\hline
+		\end{tabular}		
+	\end{table}	
+
+Echo 报文
+	\begin{table}[H]
+	\centering
+		\begin{tabular}{|c|}
+			\hline
+			Command \\
+			\hline
+			source address \\
+			\hline
+			destination address \\
+			\hline
+			local address \\
+			\hline
+		\end{tabular}		
+	\end{table}
+
+% section rip (end)

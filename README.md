@@ -10,11 +10,8 @@ Main Reference:[Route Information Protocol](https://en.wikipedia.org/wiki/Routin
 #### Components:
 + DV routing:
     * Bellman-Ford algorithm
-    * Ford-Fulkerson
 + RIP hop count metric
 + split horizon, route poisoning, holddown
-+ RIP version 2: 224.0.0.9 is used to broadcast
-+ UDP on port 520
 + Timers
     * Update
     * Invaild
@@ -86,3 +83,21 @@ How to connect to the server?
 
 How to connect to the neighbours?
 + send hello to the neighbours at the beginning and periodically
+
+
+
+## DOCUMENT
++ Overview
++ Algorithm
++ Protocol Specification
+    * Flow
+    * Timer
++ Message Format
++ Protocol Extension
+    * Deal with the disadvantages of origin DV and LS
+        - DV: infinite count
+        - LS: multi-path, looping
+    * TraceRoute
++ Implementation
++ Result
++ Conclusion

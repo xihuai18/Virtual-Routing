@@ -1,0 +1,105 @@
+\section{Centralized}
+\subsection{协议概述} % (fold)
+	\label{sub:协议概述}
+	
+	% subsection 协议概述 (end)
+	\subsection{算法} % (fold)
+	\label{sub:算法}
+	
+	% subsection 算法 (end)
+	\subsection{协议特性} % (fold)
+	\label{sub:协议特性}
+	
+	% subsection 协议特性 (end)
+	\subsection{报文格式} % (fold)
+	\label{sub:报文格式}
+	
+	% subsection 报文格式 (end)
+	\subsection{协议扩展} % (fold)
+	\label{sub:协议扩展}
+	
+	% subsection 协议扩展 (end)
+	\subsection{协议实现} % (fold)
+	\label{sub:协议实现}
+	
+	% subsection 协议实现 (end)
+	\subsection{结果} % (fold)
+	\label{sub:结果}
+	
+	% subsection 结果 (end)
+	\subsection{总结} % (fold)
+	\label{sub:总结}
+	
+	% subsection 总结 (end)
+	LS 报文
+	\begin{table}[H]
+	\centering
+		\begin{tabular}{|c|}
+			\hline
+			Command \\
+			\hline
+			Source address \\
+			\hline
+			Destination address \\
+			\hline
+			Metric \\
+			\hline
+			Repeat of last 8 bytes \\
+			\hline
+			$\cdots$ \\
+			\hline
+		\end{tabular}		
+	\end{table}
+	Forward Table 报文
+	\begin{table}[H]
+	\centering
+		\begin{tabular}{|c|}
+			\hline
+			Command \\
+			\hline
+			Destination address \\
+			\hline
+			nextHop \\
+			\hline
+			Repeat of last 12 bytes \\
+			\hline
+			$\cdots$ \\
+			\hline
+		\end{tabular}		
+	\end{table}
+	Hello 报文
+	\begin{table}[H]
+	\centering
+		\begin{tabular}{|c|}
+			\hline
+			Command        \\
+			\hline
+			Source address \\
+			\hline
+			Metric         \\
+			\hline
+		\end{tabular}
+	\end{table}
+	普通报文
+	\begin{table}[H]
+	\centering
+		\begin{tabular}{|c|}
+			\hline
+			Command \\
+			\hline
+			source address \\
+			\hline
+			destination address \\
+			\hline
+			payload \\
+			\hline
+		\end{tabular}		
+	\end{table}
+	command 项：
+	\begin{enumerate}[]
+		\item 0: 普通报文
+		\item 1：hello
+		\item 2：LS
+		\item 3：转发表
+	\end{enumerate}
+% section Centralized (end)
