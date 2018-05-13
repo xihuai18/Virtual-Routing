@@ -15,7 +15,16 @@ time.sleep(2)
 routeGet = []
 while(True):
     routeGet = []
+
     while(len(routeGet) < 4):
+        # print(ospfA.distanceVector)
+        # print("")
+
+        # for item in ospfA.adjMatrix:
+        #     print(item)
+        #     print(ospfA.adjMatrix[item])
+        # print("")
+
         for addr in addresses:
             if not addr in routeGet:
                 if(ospfA.traceroute(addr)):

@@ -8,13 +8,15 @@ import copy
 sys.path.append("../utils/")
 import utils
 import json
+import math
 
 
 class OSPF(object):
     version = 2
-    helloInterval = 10
+    helloInterval = 10 // 5
     deadInterval = 60
-    broadcastInterval = 20
+    random.seed(math.ceil(time.time()*207))
+    broadcastInterval = random.randint(20, 30) // 5
     TraceRouteInterval = 5
     summit = b''
     path = {}
@@ -47,11 +49,12 @@ class OSPF(object):
         # say hello to neighbors
         self.__hello()
         __broadcastAndTimer(self)
-        self.listenUDPThread = threading.Thread(target=self.__listenUDP)
-        self.listenUDPThread.start()
+        # self.listenUDPThread = threading.Thread(target=self.__listenUDP)
+        # self.listenUDPThread.start()
 
     def __initDistanceVector(self):
         # source neighbor(IP,port) cost ... last 2 terms repeated
+        self.adjMatrix[self.address] = {}
         with open(self.topoFilename, 'r') as fileReader:
             lines = fileReader.readlines()
             for line in lines:
@@ -67,6 +70,7 @@ class OSPF(object):
         self.distanceVector[neighbourItem[0]] = [neighbourItem[0], ]
         self.neighbour.update({neighbourItem[0]: neighbourItem[1]})
         self.adjMatrix.update({neighbourItem[0]: neighbourLS})
+        self.adjMatrix[self.address].update({neighbourItem[0]: neighbourItem[1]})
         self.neighbourTimer.update({neighbourItem[0]: threading.Timer(
             self.deadInterval, self.__removeNeighbour,
             args=[neighbourItem[0]])})
@@ -74,10 +78,13 @@ class OSPF(object):
 
     def __removeNeighbour(self, neighbour):
         def __realRemove(self, neighbour):
+            self.DistanceVectorLock.acquire()
             self.neighbour.pop(neighbour)
             if neighbour in self.adjMatrix[self.address]:
                 self.adjMatrix[self.address].pop(neighbour)
-            self.adjMatrix[neighbour].pop(self.address)
+            if self.address in self.adjMatrix[neighbour]:
+                self.adjMatrix[neighbour].pop(self.address)
+            self.DistanceVectorLock.release()
             self.__updateVector()
         self.neighbourTimer.pop(neighbour)
         __realRemove(self, neighbour)
@@ -125,17 +132,17 @@ class OSPF(object):
         metric = struct.unpack("!H", data)
         if not sourceAddress in self.neighbour.keys():
             self.__addNeighbour((sourceAddress, metric), {})
-        else :
+        else:
             if self.neighbourTimer[sourceAddress].isAlive():
                 self.neighbourTimer[sourceAddress].cancel()
-                self.neighbourTimer.update({sourceAddress:threading.Timer(self.deadInterval, self.__removeNeighbour, args=[sourceAddress])})
+                self.neighbourTimer.update({sourceAddress: threading.Timer(
+                    self.deadInterval, self.__removeNeighbour, args=[sourceAddress])})
                 self.neighbourTimer[sourceAddress].start()
             else:
-            # if the hello is received simultaneous!!
+                # if the hello is received simultaneous!!
                 while sourceAddress in self.neighbour.keys():
                     pass
                 self.__addNeighbour((sourceAddress, metric), {})
-
 
     # data contains only the neighbour of the sourceAddress
     def __LSUReceived(self, sourceAddress, data):
@@ -153,13 +160,15 @@ class OSPF(object):
         (ip, port, count) = struct.unpack("!IHB", packet[7:14])
         destAddress = (utils.int2ip(ip), port)
         count = count - 1
-        if count > 0 and destAddress != self.address: 
+        if count > 0 and destAddress != self.address:
             packet = packet[0:-1] + struct.pack("!B", count)
             self.__sendPacket(packet, destAddress)
         elif count == 0:  # send Echo packet
             EchoPacket = struct.pack("!BIHIHIH", 4, utils.ip2int(sourceAddress[0]),
-                                     sourceAddress[1], utils.ip2int(destAddress[0]),
-                                     destAddress[1], utils.ip2int(self.address[0]),
+                                     sourceAddress[1], utils.ip2int(
+                                         destAddress[0]),
+                                     destAddress[1], utils.ip2int(
+                                         self.address[0]),
                                      self.address[1])
             self.__sendPacket(EchoPacket, sourceAddress)
 
@@ -211,8 +220,8 @@ class OSPF(object):
 
         for i in range(1, 32 + 1):
             packet = struct.pack("!BIHIHB", 3, utils.ip2int(self.address[0]),
-                                    self.address[1], utils.ip2int(address[0]),
-                                    address[1], i)
+                                 self.address[1], utils.ip2int(address[0]),
+                                 address[1], i)
             self.__sendPacket(packet, address)
         threading.Timer(self.TraceRouteInterval,
                         self.__traceRouteExceed, args=[address]).start()
@@ -223,7 +232,7 @@ class OSPF(object):
     def __hello(self):
         for addr in self.neighbour.keys():
             self.__sendHello(addr)
-        threading.Timer(self.helloInterval, self.__hello)
+        threading.Timer(self.helloInterval, self.__hello).start()
 
     def __traceRouteExceed(self, dest):
         if not dest in self.traceRouteList:
@@ -268,14 +277,15 @@ class OSPF(object):
                                                 self.neighbour[item])
         else:
             packet = packet[0:7] + struct.pack("!IH", utils.ip2int(self.address[0]),
-                                                    self.address[1]) + packet[13:]
+                                               self.address[1]) + packet[13:]
         self.__sendPacket(packet, address)
 
     def __dijkstra(self, neighbour):
         dist = {neighbour: 0}
         dist.update(self.adjMatrix[neighbour])
-        # s = set([neighbour])
+        s = set([neighbour])
         t = set(self.adjMatrix[neighbour].keys())
+        # print('initial t:', t)
         while len(t) > 0:
             min_dist = None
             nearest_dest = None
@@ -283,26 +293,34 @@ class OSPF(object):
                 if min_dist is None or dist[dest] < min_dist:
                     min_dist = dist[dest]
                     nearest_dest = dest
-            # s.add(nearest_dest)
+            s.add(nearest_dest)
             t.remove(nearest_dest)
+            # print('nearest_dest:', nearest_dest)
             if nearest_dest in self.adjMatrix:
-                for (dest, dist_nd) in self.adjMatrix[nearest_dest]:
-                    t.add(dest)
-                    if dest not in dist or min_dist + dist_nd < dist[dest]:
-                        dist[dest] = min_dist + dist_nd
+                for (dest, dist_nd) in self.adjMatrix[nearest_dest].items():
+                    if dest not in s:
+                        # print('add to t:', dest)
+                        t.add(dest)
+                        if dest not in dist or min_dist + dist_nd < dist[dest]:
+                            dist[dest] = min_dist + dist_nd
         return dist
 
     def __updateVector(self, neighbour=None, neighbourVector=None):
+        # print("update:", neighbour, neighbourVector)
+        # print("before:", self.distanceVector)
+        # print("")
         self.DistanceVectorLock.acquire()
-        if neighbour is not None:
+        if neighbour is not None: 
             self.adjMatrix[neighbour] = neighbourVector
         # print("adjMatrix of", self.address)
         # for nb in self.adjMatrix:
         #     print(nb, self.adjMatrix[nb])
+        # print('')
         neighbourDist = {}
         selfDist = {}
         for (nb, dist_nb) in self.neighbour.items():
             neighbourDist[nb] = self.__dijkstra(nb)
+            # print(nb, neighbourDist)
             for (dest, dist) in neighbourDist[nb].items():
                 if dest not in selfDist or dist_nb + dist < selfDist[dest]:
                     selfDist[dest] = dist_nb + dist
@@ -314,4 +332,5 @@ class OSPF(object):
             for (dest, dist) in nbDist.items():
                 if selfDist[dest] == dist_nb + dist:
                     self.distanceVector[dest].append(nb)
+        # print("after:", self.distanceVector, end='\n\n')
         self.DistanceVectorLock.release()

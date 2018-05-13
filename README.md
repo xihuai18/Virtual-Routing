@@ -58,3 +58,31 @@ Timers:
 2. dead
 
 ## Centralized
+
+### Server
++ connect with routers 
++ receive the LS from routers
++ execute the Floyd algorithm
++ send the corresponding forwarding table to each router
+
+How to connect the routers?
+1. routers send LS packet periodically
+2. set a dead interval
+How to store the map?
+
+How to send the forwarding table?
++ Triggered update and periodically
+
+Using Twisted!
+
+### Client
++ connect with the server
++ connecting with the neighbours
++ send the LS to the server
++ receive the forwarding from the server
+
+How to connect to the server?
++ periodically and at the beginning
+
+How to connect to the neighbours?
++ send hello to the neighbours at the beginning and periodically
