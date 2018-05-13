@@ -27,16 +27,29 @@ class ServerProtocol(DatagramProtocol):
         pass
 
     def __LSReceived(self, neighbourVector):
-        # remeber to reset the calllater handlers
+        # remember to reset the calllater handlers
         pass
 
     def __sendForwardTable(self):
         # send forwarding tables to all the neighbours
         pass
 
-    def __updateVector(self, neighbourVector):
+    def __updateVector(self, client, neighbourVector):
         # lock
-        pass
+        self.mapLock.acquire()
+        self.map.update({client: neighbourVector})
+        self.__floyd()
+        self.mapLock.release()
 
     def __floyd(self):
-        pass
+        dist = copy.deepcopy(self.map)
+        self.nextHopForRouters.clear()
+        for i in self.map:
+            self.nextHopForRouters[i] = {}
+        for k in self.map:
+            for i in self.map:
+                for j in self.map:
+                    if k in dist[i] and j in dist[k]:
+                        if j not in dist[i] or dist[i][k] + dist[k][j] < dist[i][j]:
+                            dist[i][j] = dist[i][k] + dist[k][j]
+                            self.nextHopForRouters[i][j] = k
