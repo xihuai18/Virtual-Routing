@@ -35,6 +35,7 @@ class OSPF(object):
         self.recvSocket.bind((self.address))
         # dictionary of dictionary
         self.adjMatrix = {}
+        self.__begin()
 
     def __begin(self):
         def __broadcastAndTimer(self):
@@ -46,6 +47,8 @@ class OSPF(object):
         # say hello to neighbors
         self.__hello()
         __broadcastAndTimer(self)
+        self.listenUDPThread = threading.Thread(target=self.__listenUDP)
+        self.listenUDPThread.start()
 
     def __initDistanceVector(self):
         # source neighbor(IP,port) cost ... last 2 terms repeated
@@ -61,7 +64,7 @@ class OSPF(object):
                         self.__addNeighbour((destAddress, cost), {})
 
     def __addNeighbour(self, neighbourItem, neighbourLS):
-        self.distanceVector[neighbourItem[0]] = neighbourItem[0]
+        self.distanceVector[neighbourItem[0]] = [neighbourItem[0], ]
         self.neighbour.update({neighbourItem[0]: neighbourItem[1]})
         self.adjMatrix.update({neighbourItem[0]: neighbourLS})
         self.neighbourTimer.update({neighbourItem[0]: threading.Timer(
@@ -71,8 +74,9 @@ class OSPF(object):
 
     def __removeNeighbour(self, neighbour):
         def __realRemove(self, neighbour):
-            self.neighbour.remove(neighbour)
-            self.adjMatrix[self.address].pop(neighbour)
+            self.neighbour.pop(neighbour)
+            if neighbour in self.adjMatrix[self.address]:
+                self.adjMatrix[self.address].pop(neighbour)
             self.adjMatrix[neighbour].pop(self.address)
             self.__updateVector()
         self.neighbourTimer.pop(neighbour)
@@ -98,7 +102,7 @@ class OSPF(object):
             self.__helloReceived(sourceAddress, data[7:])
         elif command == 2:
             self.__LSUReceived(sourceAddress, data[13:])
-            (ip, port) = struct.unpack("!BIH", data[7:13])
+            (ip, port) = struct.unpack("!IH", data[7:13])
             transmitAddress = (utils.int2ip(ip), port)
             self.__broadcastReceived(transmitAddress, sourceAddress, data)
         elif command == 3:
@@ -146,7 +150,7 @@ class OSPF(object):
     def __tracerouteReceived(self, packet):
         (ip, port) = struct.unpack("!IH", packet[1:7])
         sourceAddress = (utils.int2ip(ip), port)
-        (ip, port, count) = struct.unpack("!IHB", packet[7:13])
+        (ip, port, count) = struct.unpack("!IHB", packet[7:14])
         destAddress = (utils.int2ip(ip), port)
         count = count - 1
         if count > 0 and destAddress != self.address: 
@@ -178,6 +182,8 @@ class OSPF(object):
             self.traceRouteResult[destAddress] = 1
 
     def __broadcastReceived(self, transmitAddress, sourceAddress, packet):
+        if not sourceAddress in self.distanceVector:
+            return 
         bestHop = self.distanceVector[sourceAddress]
         # Reverse Path First
         # bestHop may be multiple
@@ -200,11 +206,19 @@ class OSPF(object):
         self.__sendPacket(packet, address)
 
     def traceroute(self, address):
+        self.traceRouteResult[address] = 0
+        self.path[address] = []
+
         for i in range(1, 32 + 1):
             packet = struct.pack("!BIHIHB", 3, utils.ip2int(self.address[0]),
                                     self.address[1], utils.ip2int(address[0]),
                                     address[1], i)
             self.__sendPacket(packet, address)
+        threading.Timer(self.TraceRouteInterval,
+                        self.__traceRouteExceed, args=[address]).start()
+        while(self.traceRouteResult[address] == 0):
+            pass
+        return self.traceRouteResult[address] == 1
 
     def __hello(self):
         for addr in self.neighbour.keys():
@@ -219,8 +233,10 @@ class OSPF(object):
 
     def __sendPacket(self, packet, address):
         # check the existence
-        if address not in self.distanceVector:
-            print("Destination unreachable")
+        if not address in self.distanceVector:
+            # print("Destination unreachable")
+            return False
+        # print("self.distanceVector = ", self.distanceVector)
         bestHop = self.distanceVector[address]
         nextHop = bestHop[random.randint(0, len(bestHop) - 1)]
         s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -244,11 +260,12 @@ class OSPF(object):
 
     def __sendLSU(self, address, packet=None):
         if packet == None:
-            packet = struct.pack("!BIHIHH", 2, utils.ip2int(self.address[0]),
+            packet = struct.pack("!BIHIH", 2, utils.ip2int(self.address[0]),
                                     self.address[1], utils.ip2int(self.address[0]),
                                     self.address[1])
             for item in self.neighbour.keys():
-                packet += utils.ip2int(item) + self.neighbour[item]
+                packet += struct.pack("!IHH", utils.ip2int(item[0]), item[1],
+                                                self.neighbour[item])
         else:
             packet = packet[0:7] + struct.pack("!IH", utils.ip2int(self.address[0]),
                                                     self.address[1]) + packet[13:]
@@ -268,16 +285,20 @@ class OSPF(object):
                     nearest_dest = dest
             # s.add(nearest_dest)
             t.remove(nearest_dest)
-            for (dest, dist_nd) in self.adjMatrix[nearest_dest]:
-                t.add(dest)
-                if dest not in dist or min_dist + dist_nd < dist[dest]:
-                    dist[dest] = min_dist + dist_nd
+            if nearest_dest in self.adjMatrix:
+                for (dest, dist_nd) in self.adjMatrix[nearest_dest]:
+                    t.add(dest)
+                    if dest not in dist or min_dist + dist_nd < dist[dest]:
+                        dist[dest] = min_dist + dist_nd
         return dist
 
     def __updateVector(self, neighbour=None, neighbourVector=None):
         self.DistanceVectorLock.acquire()
         if neighbour is not None:
             self.adjMatrix[neighbour] = neighbourVector
+        # print("adjMatrix of", self.address)
+        # for nb in self.adjMatrix:
+        #     print(nb, self.adjMatrix[nb])
         neighbourDist = {}
         selfDist = {}
         for (nb, dist_nb) in self.neighbour.items():
