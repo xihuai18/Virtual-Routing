@@ -17,28 +17,54 @@ class ServerProtocol(DatagramProtocol):
     DEADINTERVAL = 30
     mapLock = threading.Lock()
 
-    def __init__(self, address):
+    def __init__(self, address, reactor):
         self.address = address  # address : (ip, port)
+        self.reactor = reactor
         self.map = {}  # map that contains the whole routes map
         # map that contains a complete map that indicates the nexthops of each router
         self.nextHopForRouters = {}
+        self.callLaterHandles = {}
+
+    def __removeClient(self, client):
+        self.map.pop(client)
+        self.nextHopForRouters.pop(client)
+        self.callLaterHandles.pop(client)
 
     def datagramReceived(self, recvPacket, recvAddr):
-        pass
+        command = struct.unpack("!B", recvPacket[0:1])
+        if command == 2: # LS
+            (ip, port) = struct.unpack("!IH", recvPacket[1:7])
+            client = (utils.int2ip(ip), port)
+            self.__LSReceived(client, recvPacket[7:])
 
-    def __LSReceived(self, neighbourVector):
-        # remember to reset the calllater handlers
-        pass
+    def __LSReceived(self, client, data):
+        neighbourVector = {}
+        for i in range(0, len(data), 8):
+            (ip, port, metric) = struct.unpack("!IHH", data[i:i+8])
+            destAddress = (utils.int2ip(ip), port)
+            neighbourVector[destAddress] = metric
+        self.__updateVector(client, neighbourVector)
+        if client in self.callLaterHandles:
+            self.callLaterHandles[client].cancel()
+        self.callLaterHandles[client] = self.reactor.callLater(self.DEADINTERVAL, 
+                                                                self.__removeClient,
+                                                                args=[client])
 
     def __sendForwardTable(self):
         # send forwarding tables to all the neighbours
-        pass
+        for client in self.map:
+            packet = struct.pack('!B', 3)
+            for item in self.nextHopForRouters[client].items():
+                packet += struct.pack("!IHIH", utils.ip2int(item[0][0]), 
+                                            item[0][1], utils.ip2int(item[1][0]),
+                                            item[1][1])
+            self.transport.write(packet, client)
 
     def __updateVector(self, client, neighbourVector):
-        # lock
         self.mapLock.acquire()
-        self.map.update({client: neighbourVector})
-        self.__floyd()
+        if client not in self.map or neighbourVector != self.map[client]:
+            self.map[client] = neighbourVector
+            self.__floyd()
         self.mapLock.release()
 
     def __floyd(self):
