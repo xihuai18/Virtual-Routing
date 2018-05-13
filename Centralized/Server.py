@@ -79,3 +79,24 @@ class ServerProtocol(DatagramProtocol):
                         if j not in dist[i] or dist[i][k] + dist[k][j] < dist[i][j]:
                             dist[i][j] = dist[i][k] + dist[k][j]
                             self.nextHopForRouters[i][j] = k
+
+    def getRoute(self, source, dest):
+        route = [source]
+        node = source
+        while node != dest:
+            if node not in self.nextHopForRouters:
+                return None
+            if dest not in self.nextHopForRouters[node]:
+                return None
+            node = self.nextHopForRouters[node][dest]
+            route.append(node)
+        return route
+
+SERVER_PORT = 999
+
+def main():
+    reactor.listenUDP(SERVER_PORT, ServerProtocol)
+    reactor.run()
+
+if __name__ == '__main__':
+    main()
