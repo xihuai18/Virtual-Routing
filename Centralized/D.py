@@ -14,3 +14,5 @@ addresses = [clientEAddress, clientBAddress, clientCAddress, clientDAddress]
 
 filename = input("Input the topology filename: ")
 clientD = Client(clientDAddress, serverAddress, filename)
+while(True):
+    pass

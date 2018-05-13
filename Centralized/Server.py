@@ -31,12 +31,13 @@ class ServerProtocol(DatagramProtocol):
         self.nextHopForRouters.pop(client)
         self.callLaterHandles.pop(client)
 
-    def datagramReceived(self, recvPacket, recvAddr):
-        command = struct.unpack("!B", recvPacket[0:1])
+    def datagramReceived(self, data, addr):
+        print(data)
+        command = struct.unpack("!B", data[0:1])
         if command == 2:  # LS
-            (ip, port) = struct.unpack("!IH", recvPacket[1:7])
+            (ip, port) = struct.unpack("!IH", data[1:7])
             client = (utils.int2ip(ip), port)
-            self.__LSReceived(client, recvPacket[7:])
+            self.__LSReceived(client, data[7:])
 
     def __LSReceived(self, client, data):
         neighbourVector = {}
@@ -95,7 +96,12 @@ class ServerProtocol(DatagramProtocol):
 
 
 def printRoute(server):
+    for (source, LS) in server.map.items():
+        print(source)
+        print(LS)
+            
     routers = server.map.keys()
+    print("Printing")
     for source in routers:
         for dest in routers:
             if source != dest:
@@ -113,8 +119,8 @@ SERVER_PORT = 51000
 
 def main():
     server = ServerProtocol(("127.0.0.1", SERVER_PORT), reactor)
-    reactor.listenUDP(SERVER_PORT, server)
-    task.LoopingCall(printRoute, [server]).start(5)
+    reactor.listenUDP(SERVER_PORT, server, "127.0.0.1")
+    task.LoopingCall(printRoute, server).start(5)
     reactor.run()
 
 

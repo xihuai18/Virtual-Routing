@@ -31,6 +31,8 @@ class Client(object):
         self.recvSocket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self.recvSocket.bind((self.address))
 
+        self.__begin()
+
     def __begin(self):
         self.__initNeighbour()
         threading.Thread(target=self.__listenUDP).start()
@@ -38,7 +40,7 @@ class Client(object):
         self.__sendLSToServer()
 
     def __initNeighbour(self):
-        with open(self.topoFilename, 'r') as fileReader:
+        with open(self.topoFileName, 'r') as fileReader:
             lines = fileReader.readlines()
             for line in lines:
                 items = line.split(',')
@@ -47,19 +49,19 @@ class Client(object):
                     for i in range(2, len(items), 3):
                         destAddress = (items[i], int(items[i+1]))
                         cost = int(items[i+2])
-                        self.__addNeighbour((destAddress, cost), {})
+                        self.__addNeighbour((destAddress, cost))
 
     def __addNeighbour(self, neighbourItem):
         # SET TIMER
         self.neighbour.update({neighbourItem[0]: neighbourItem[1]})
         self.neighbourTimer.update({neighbourItem[0]: threading.Timer(
-            self.deadInterval, self.__removeNeighbour,
+            self.DEADLINE, self.__removeNeighbour,
             args=[neighbourItem[0]])})
         self.neighbourTimer[neighbourItem[0]].start()
 
     def __removeNeighbour(self, neighbour):
         self.neighbourTimer.pop(neighbour)
-        self.neighbour.remove(neighbour)
+        self.neighbour.pop(neighbour)
 
     def __listenUDP(self):
         while True:
@@ -88,7 +90,10 @@ class Client(object):
         for addr, cost in self.neighbour.items():
             packet += struct.pack("!IHH", utils.ip2int(
                 addr[0]), addr[1], cost)
+        for addr, cost in self.neighbour.items():
+            print(addr, cost)
         self.__sendPacket(packet, address)
+        
 
     def __sendLSToServer(self):
         # Timer inside
@@ -107,9 +112,10 @@ class Client(object):
         threading.Timer(self.HELLOINTERVAL, self.__hello).start()
 
     def __sendPacket(self, packet, address):
-        if address not in self.distanceVector:
+        if address not in self.forwardTable:
             print("Destination unreachable")
-        nextHop = self.distanceVector[address]
+            return
+        nextHop = self.forwardTable[address]
         s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         s.sendto(packet, nextHop)
         s.close()
