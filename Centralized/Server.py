@@ -110,10 +110,10 @@ class ServerProtocol(DatagramProtocol):
         for router in self.map:
             for dest in routerDist[router]:
                 for (nb, nb_dist) in self.map[router].items():
-                    if dest in routerDist[nb] and 
-                    nb_dist + routerDist[nb][dest] == routerDist[router][dest]:
-                        self.nextHopForRouters[router][dest] = nb
-                        break
+                    if nb in routerDist:
+                        if dest in routerDist[nb] and nb_dist + routerDist[nb][dest] == routerDist[router][dest]:
+                            self.nextHopForRouters[router][dest] = nb
+                            break
 
     def getRoute(self, source, dest):
         route = [source]
