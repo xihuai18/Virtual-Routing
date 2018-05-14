@@ -79,8 +79,11 @@ class RIPv2(object):
     def __removeNeighbour(self, neighbour):
         def __realRemove(self, neighbour):
             self.neighbour.remove(neighbour)
+            self.DistanceVectorLock.acquire()
             self.distanceVector.pop(neighbour)
+            self.DistanceVectorLock.release()
         self.neighbourTimer.pop(neighbour)
+        self.__updateVector(neighbour, {neighbour: INF})
         threading.Timer(60, __realRemove, args=[self, neighbour]).start()
 
     def __multicast(self, command):
