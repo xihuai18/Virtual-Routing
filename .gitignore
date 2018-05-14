@@ -2,3 +2,10 @@
 */.vs/*
 local_note.md
 */__pycache__
+
+*.aux
+*.log
+*.xdv
+*.out
+*.gz
+*/report.pdf
