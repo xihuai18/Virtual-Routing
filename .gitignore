@@ -3,9 +3,14 @@
 local_note.md
 */__pycache__
 
+*/build
+*/build/*
 *.aux
 *.log
 *.xdv
 *.out
 *.gz
+*.toc
+*.pkg
+*.pyz
 */report.pdf

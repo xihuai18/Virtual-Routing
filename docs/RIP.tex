@@ -2,7 +2,7 @@
 \label{sec:rip}
 	\subsection{协议概述} % (fold)
 	\label{sub:协议概述}
-		本项目中实现的RIP协议采用了RIPv1和RIPv2的协议规定的一部分，是一个基于DV算法的网络层路由协议。其主要算法是Bellman-Ford算法，路由费用以路由跳数作为度量，运行该协议的每个路由器能够计算出到其余路由器的下一跳路由以及路由费用。定义了请求报文和响应报文两种报文格式。为了缓解无穷计数问题，使用split-horizon、poison-inverse，holddown方法和triggered update方法。同时使用了flush计时器进一步缓解无穷计数问题。在协议的扩展中，实现了该协议下适用的 traceRoute功能。
+		本项目中实现的RIP协议采用了RIPv1和RIPv2的协议规定的一部分，是一个基于DV算法的网络层路由协议。其主要算法是Bellman-Ford算法，路由费用以路由跳数作为度量，运行该协议的每个路由器能够计算出到其余路由器的下一跳路由以及路由费用。定义了请求报文和响应报文两种报文格式。为了尽可能避免环路和无穷计数问题，使用的机制包括毒性逆转（split-horizon with poison inverse）、触发更新（triggered update）和抑制更新（holddown）。同时使用了flush计时器进一步缓解无穷计数问题。在协议的扩展中，实现了该协议下适用的 traceRoute功能。
 	% subsection 协议概述 (end)
 	\subsection{算法} % (fold)
 	\label{sub:算法}
