@@ -2,10 +2,13 @@
 \label{sec:rip}
 	\subsection{协议概述} % (fold)
 	\label{sub:协议概述}
-		本项目中实现的RIP协议采用了RIPv1和RIPv2的协议规定的一部分，是一个基于DV算法的网络层路由协议。其主要算法是Bellman-Ford算法，路由费用以路由跳数作为度量，运行该协议的每个路由器能够计算出到其余路由器的下一跳路由以及路由费用。定义了请求报文和响应报文两种报文格式。为了缓解无穷计数问题，使用split-horizon、poison-inverse，holddown方法和triggered update方法。同时使用了flush计时器进一步缓解无穷计数问题。在协议的扩展中，实现了该协议下适用的 traceRoute功能。
+		本项目中实现的RIP协议采用了RIPv1和RIPv2的协议规定的一部分，是一个基于DV算法的网络层路由协议。其主要算法是Bellman-Ford算法，路由费用以路由跳数作为度量，运行该协议的每个路由器能够计算出到其余路由器的下一跳路由以及路由费用。定义了请求报文和响应报文两种报文格式。为了尽可能避免环路和无穷计数问题，使用的机制包括毒性逆转（split-horizon with poison inverse）、触发更新（triggered update）和抑制更新（holddown）。同时使用了flush计时器进一步缓解无穷计数问题。在协议的扩展中，实现了该协议下适用的 traceRoute功能。
 	% subsection 协议概述 (end)
 	\subsection{算法} % (fold)
 	\label{sub:算法}
+		路由表计算主要基于Bellman-Ford算法。在基本的DV算法中，路由器每次收到邻居发来的路由信息时，会使用Bellman-Ford的更新公式更新自己的路由表：$$ dist_{self}(dest) = \min_{neighbour}\{dist_{neighbour}(dest) + metric(self,neighbour)\} $$ 为此，路由器需要在维护自己路由表的同时，保存邻居发来的路由表。
+		\par 在RIP协议中，路由器只需保存和维护自己的路由表。在收到邻居发来的路由信息时，会将其与自己当前的路由表进行比较，而不是用所有邻居的路由表重新计算和比较。具体而言，RIP协议使用的更新公式为（假设收到邻居$nb$的路由信息）：$$ dist_{self}(dest) = \begin{cases} \min( dist_{self}(dest), dist_{nb}(dest) + metric(self,nb) ) & , nextHop_{self}(dest) \neq nb \\ dist_{nb}(dest) + metric(self,nb) & , nextHop_{self}(dest) = nb \end{cases}$$ 采用这种更新方式避免了路由器存储邻居路由表的开销，也减少了更新所需的计算量。不足之处在于最短路径费用增加时，不能马上从其余路径中找到更优的并将其替代，需要等待其他邻居发送路由信息。（事实上，为了避免环路和无穷计数问题，原最短路径费用增加后从其余路径中找替代的更新方式是不被允许的。）
+		\par 
 	
 	% subsection 算法 (end)
 	\subsection{协议特性} % (fold)
@@ -128,9 +131,9 @@
 		\item Route tag（2 Bytes）：本项目中不用。
 		\item address（6 Bytes）：ip和端口号。
 		\item Next hop（6 Bytes）：下一跳路由的ip和端口。
-		\item matric（1 Bytes）：代价度量（跳数）。
+		\item metric（1 Byte）：代价度量（跳数）。
 		\item Local address（6 Bytes）：指明Echo报文发送者的源地址和监听端口。
-		\item Count(1 Bytes)：路由跳数。
+		\item Count(1 Byte)：路由跳数。
 	\end{enumerate}
 	% subsection 报文格式 (end)
 	\subsection{协议扩展} % (fold)
