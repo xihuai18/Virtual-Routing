@@ -17,10 +17,10 @@
 		\label{ssub:协议流程}
 		本项目中实现的RIP协议主要包含的流程如下：
 		\begin{itemize}
-			\item 路由器在进入区域时，向所有邻居发送request报文，邻居则返回一个response报文，里面含有邻居的距离矢量表。
-			\item 该路由器会定时地向所有的邻居发送response报文，即就是发送自己的距离矢量表。
+			\item 路由器在进入区域时，向所有邻居发送request报文，邻居则返回一个response报文，里面含有邻居的路由信息。
+			\item 该路由器会定时地向所有的邻居发送response报文，即就是发送自己的路由表。
 			\item 收到一个response报文意味着要维持该邻居的状态；而如果在一段时间内没有收到某个邻居路由器的response报文，则认为该路由器故障或离开该区域。
-			\item 当收到其它邻居路由器的距离矢量表时，根据该信息更新自己的距离矢量表；当自己的距离矢量更新时，向所有邻居发送自己新的距离矢量表。
+			\item 当收到其它邻居路由器的路由信息时，根据该信息更新自己的路由表；当自己的距离矢量更新时，向所有邻居发送自己新的路由表。
 		\end{itemize}
 		% subsubsection 协议流程 (end)
 	% subsection 协议特性 (end)
@@ -176,6 +176,10 @@
 	% subsection 结果 (end)
 	\subsection{总结} % (fold)
 	\label{sub:总结}
+		\begin{enumerate}
+			\item 原生的DV算法会因为RIP收敛速度缓慢，而产生路由环路的问题，而我们的RIP协议中采用了多种机制来解决了这种问题。
+			\item 原生的DV算法需要保存邻居的路由表，而采用RIP协议的更新公式，避免了路由器存储邻居路由表的开销，而且减少了路由器更新时的计算量。
+		\end{enumerate}
 	
 	% subsection 总结 (end)
 
