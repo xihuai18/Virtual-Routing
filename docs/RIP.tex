@@ -10,7 +10,16 @@
 	% subsection 算法 (end)
 	\subsection{协议特性} % (fold)
 	\label{sub:协议特性}
-	
+	\subsubsection{协议流程} % (fold)
+		\label{ssub:协议流程}
+		本项目中实现的RIP协议主要包含的流程如下：
+		\begin{itemize}
+			\item 路由器在进入区域时，向所有邻居发送request报文，邻居则返回一个response报文，里面含有邻居的距离矢量表。
+			\item 该路由器会定时地向所有的邻居发送response报文，即就是发送自己的距离矢量表。
+			\item 收到一个response报文意味着要维持该邻居的状态；而如果在一段时间内没有收到某个邻居路由器的response报文，则认为该路由器故障或离开该区域。
+			\item 当收到其它邻居路由器的距离矢量表时，根据该信息更新自己的距离矢量表；当自己的距离矢量更新时，向所有邻居发送自己新的距离矢量表。
+		\end{itemize}
+		% subsubsection 协议流程 (end)
 	% subsection 协议特性 (end)
 	\subsection{报文格式} % (fold)
 	\label{sub:报文格式}
@@ -126,15 +135,38 @@
 	% subsection 报文格式 (end)
 	\subsection{协议扩展} % (fold)
 	\label{sub:协议扩展}
-	
+		\begin{enumerate}
+			\item 网络环路\\
+				路由器可能收到自己发送的路由信息，因此造成网络环路。\\
+				为了避免该情况，采用了：水平分割、毒性逆转、抑制定时器和触发更新机制。
+			\item 无穷计数\\
+				采用flush计时器
+			\item TraceRoute
+		\end{enumerate}
 	% subsection 协议扩展 (end)
 	\subsection{协议实现} % (fold)
 	\label{sub:协议实现}
-	
+		本RIP协议基本由Python实现，主要利用的是socket库进行套接字编程并采用的是UDP协议、struct库进行数据的打包和解包、threading库管理线程和定时器。
+		\par 实现方法实现了一个RIP协议类，处理内部流程和为外部调用留出了收发数据、查询路由路径等接口。
 	% subsection 协议实现 (end)
 	\subsection{结果} % (fold)
 	\label{sub:结果}
-	
+		测试所用的拓扑图以及路由结果如下图\ref{fig:ripTest1}和\ref{fig:ripTest2}所示。
+		\begin{figure}[H]
+			\centering
+			\includegraphics[scale=0.4]{imgs/topo1/tpop1.png}
+			\includegraphics[scale=0.5]{imgs/ripTest1.PNG}
+			\caption{RIP测试样例一}
+			\label{fig:ripTest1}
+		\end{figure}
+		\begin{figure}[H]
+			\centering
+			\includegraphics[scale=0.4]{imgs/topo1/topo2.png}
+			\includegraphics[scale=0.4]{imgs/ripTest2.PNG}
+			\caption{RIP测试样例二}
+			\label{fig:ripTest2}
+		\end{figure}
+		成功找出了其中的跳数最小的路径。
 	% subsection 结果 (end)
 	\subsection{总结} % (fold)
 	\label{sub:总结}
