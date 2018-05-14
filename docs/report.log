@@ -1,4 +1,4 @@
-This is XeTeX, Version 3.14159265-2.6-0.99998 (TeX Live 2017/W32TeX) (preloaded format=xelatex 2018.3.24)  14 MAY 2018 16:10
+This is XeTeX, Version 3.14159265-2.6-0.99998 (TeX Live 2017/W32TeX) (preloaded format=xelatex 2018.3.24)  14 MAY 2018 17:09
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -1985,15 +1985,15 @@ Package Fancyhdr Warning: \headheight is too small (12.0pt):
 . <->"FangSong/OT:script=hani;language=DFLT;"
 . - 'small caps'  (m/sc) with NFSS spec.: 
 .................................................
- (./RIP.tex [3]
+ (./RIP.tex [3] [4]
 
 LaTeX Warning: The counter will not be printed.
-             The label is:  on input line 60.
+             The label is:  on input line 108.
 
-[4]) (./OSPF.tex [5] [6]
+) (./OSPF.tex [5] [6]
 
 LaTeX Warning: The counter will not be printed.
-             The label is:  on input line 104.
+             The label is:  on input line 105.
 
 [7]
 File: imgs/topo2/tpop1.png Graphic file (type bmp)
@@ -2004,18 +2004,24 @@ File: imgs/topo2/topo2.png Graphic file (type bmp)
 <imgs/topo2/topo2.png>
 File: imgs/ospfTest2.PNG Graphic file (type bmp)
 <imgs/ospfTest2.PNG>
- [8] [9]) (./Centralized.tex [10]
+ [8]) (./Centralized.tex [9] [10]
 
 LaTeX Warning: The counter will not be printed.
              The label is:  on input line 99.
 
-)
-Package atveryend Info: Empty hook `BeforeClearDocument' on input line 67.
- [11]
-Package atveryend Info: Empty hook `AfterLastShipout' on input line 67.
+) [11]
+Overfull \hbox (0.73332pt too wide) in paragraph at lines 76--77
+[][][]$[][][][] [] [] [] [][][] [] [][][][][][][][] [] [][][] [] [][] [] [][][]
+[][][][][][][] [] [][][][][] [] [][][][] [] [][][][] [] [][][][] [] [][][][][]$
+[][]\TU/TimesNewRoman(0)/m/n/10.53937 , Four Timer
+ []
+
+Package atveryend Info: Empty hook `BeforeClearDocument' on input line 81.
+[12]
+Package atveryend Info: Empty hook `AfterLastShipout' on input line 81.
  (./report.aux)
-Package atveryend Info: Empty hook `AtVeryEndDocument' on input line 67.
-Package atveryend Info: Empty hook `AtEndAfterFileList' on input line 67.
+Package atveryend Info: Empty hook `AtVeryEndDocument' on input line 81.
+Package atveryend Info: Empty hook `AtEndAfterFileList' on input line 81.
 
 
 LaTeX Font Warning: Size substitutions with differences
@@ -2027,7 +2033,7 @@ LaTeX Font Warning: Some font shapes were not available, defaults substituted.
 
 LaTeX Warning: There were multiply-defined labels.
 
-Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 67.
+Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 81.
  ) 
 Here is how much of TeX's memory you used:
  30510 strings out of 493007
@@ -2036,6 +2042,6 @@ Here is how much of TeX's memory you used:
  34168 multiletter control sequences out of 15000+600000
  532596 words of font info for 63 fonts, out of 8000000 for 9000
  1348 hyphenation exceptions out of 8191
- 57i,12n,68p,10432b,485s stack positions out of 5000i,500n,10000p,200000b,80000s
+ 57i,12n,68p,10432b,448s stack positions out of 5000i,500n,10000p,200000b,80000s
 
-Output written on report.xdv (12 pages, 108876 bytes).
+Output written on report.xdv (13 pages, 122452 bytes).

@@ -2,7 +2,7 @@
 \label{sec:rip}
 	\subsection{协议概述} % (fold)
 	\label{sub:协议概述}
-	
+		本项目中实现的RIP协议采用了RIPv1和RIPv2的协议规定的一部分，是一个基于DV算法的网络层路由协议。其主要算法是Bellman-Ford算法，路由费用以路由跳数作为度量，运行该协议的每个路由器能够计算出到其余路由器的下一跳路由以及路由费用。定义了请求报文和响应报文两种报文格式。为了缓解无穷计数问题，使用split-horizon、poison-inverse，holddown方法和triggered update方法。同时使用了flush计时器进一步缓解无穷计数问题。在协议的扩展中，实现了该协议下适用的 traceRoute功能。
 	% subsection 协议概述 (end)
 	\subsection{算法} % (fold)
 	\label{sub:算法}
@@ -14,7 +14,115 @@
 	% subsection 协议特性 (end)
 	\subsection{报文格式} % (fold)
 	\label{sub:报文格式}
-	
+	本实验中使用的普通报文普通数据报文、request报文、response报文、TraceRoute报文、Echo报文如下：
+	\par 普通报文：
+	\begin{table}[H]
+		\centering
+		\begin{tabular}{|c|}
+			\hline
+			Command \\
+			\hline
+			source address \\
+			\hline
+			destination address \\
+			\hline
+			payload \\
+			\hline
+		\end{tabular}		
+	\end{table}
+	request报文：
+	\begin{table}[H]
+		\centering
+		\begin{tabular}{|c|}
+			\hline
+			Command \; \vline \; Version \; \vline \; Routing domain \; \\
+			\hline
+			Source address \\
+			\hline
+			Address family \; \vline \; Route tag \; \\
+			\hline
+			address \\
+			\hline
+			Next hop \\
+			\hline
+			metric \\
+			\hline
+		\end{tabular}
+	\end{table}
+	Response报文：
+	\begin{table}[H]
+		\centering
+		\begin{tabular}{|c|}
+			\hline
+			Command \; \vline \; Version \; \vline \; Routing domain \; \\
+			\hline
+			Source address \\
+			\hline
+			Address family \; \vline \; Route tag \; \\
+			\hline
+			address \\
+			\hline
+			Next hop \\
+			\hline
+			metric \\
+			\hline
+			repeat of last 17 bytes \\
+			\hline
+			$\cdots$ \\
+			\hline 
+		\end{tabular}	
+	\end{table}
+	TraceRoute报文：
+	\begin{table}[H]
+	\centering
+		\begin{tabular}{|c|}
+			\hline
+			Command \\
+			\hline
+			source address \\
+			\hline
+			destination address \\
+			\hline
+			count \\
+			\hline
+		\end{tabular}		
+	\end{table}	
+	Echo 报文：
+	\begin{table}[H]
+	\centering
+		\begin{tabular}{|c|}
+			\hline
+			Command \\
+			\hline
+			source address \\
+			\hline
+			destination address \\
+			\hline
+			local address \\
+			\hline
+		\end{tabular}		
+	\end{table}
+	报文项解释：
+	\begin{enumerate}
+		\item Command（1 Byte）：指明这条报文的类型。
+		\begin{enumerate}[]
+			\item 0：普通报文。
+			\item 1：请求报文。
+			\item 2：响应（包含路由表）报文。
+			\item 3：TraceRoute报文。
+			\item 4：Echo报文。
+		\end{enumerate}
+		\item Version（1 Byte）：RIP协议的版本。
+		\item Routing domain（2 Bytes）：指明这是RIP中的哪一步。
+		\item Source address（6 Bytes）：指明发送方的源地址和监听端口。
+		\item Address family（2 Bytes）：使用什么作为地址，使用IP该项为2。
+		\item Route tag（2 Bytes）：本项目中不用。
+		\item address（6 Bytes）：ip和端口号。
+		\item Next hop（6 Bytes）：下一跳路由的ip和端口。
+		\item matric（1 Bytes）：代价度量（跳数）。
+		\item Local address（6 Bytes）：指明Echo报文发送者的源地址和监听端口。
+		\item Count(1 Bytes)：路由跳数。
+	\end{enumerate}
 	% subsection 报文格式 (end)
 	\subsection{协议扩展} % (fold)
 	\label{sub:协议扩展}
@@ -32,111 +140,6 @@
 	\label{sub:总结}
 	
 	% subsection 总结 (end)
-\begin{table}[H]
-	\centering
-	\begin{tabular}{|c|}
-		\hline
-		Command \; \vline \; Version \; \vline \; Routing domain \; \\
-		\hline
-		Source address \\
-		\hline
-		Address family \; \vline \; Route tag \; \\
-		\hline
-		address \\
-		\hline
-		Next hop \\
-		\hline
-		metric \\
-		\hline
-		repeat of last 17 bytes \\
-		\hline
-		$\cdots$ \\
-		\hline 
-	\end{tabular}	
-\end{table}
-报文项解释：
-\begin{enumerate}
-	\item Command（1 Byte）：指明这条报文的类型。
-	\begin{enumerate}[]
-		\item 0：普通报文。
-		\item 1：请求报文。
-		\item 2：响应（包含路由表）报文。
-		% \item 3：广播request。
-		% \item 4：广播response。
-	\end{enumerate}
-	\item Version（1 Byte）：RIP协议的版本。
-	\item Routing domain（2 Bytes）：指明这是RIP中的哪一步。
-	\item Source address（6 Bytes）：指明发送方的源地址和监听端口。
-	\item Address family（2 Bytes）：使用什么作为地址，使用IP该项为2。
-	\item Route tag（2 Bytes）：本项目中不用。
-	\item address（6 Bytes）：ip和端口号。
-	\item Next hop（6 Bytes）：下一跳路由的ip和端口。
-	\item matric（1 Bytes）：代价度量（跳数）。
-\end{enumerate}
-\begin{table}[H]
-	\centering
-	\begin{tabular}{|c|}
-		\hline
-		Command \; \vline \; Version \; \vline \; Routing domain \; \\
-		\hline
-		Source address \\
-		\hline
-		Address family \; \vline \; Route tag \; \\
-		\hline
-		address \\
-		\hline
-		Next hop \\
-		\hline
-		metric \\
-		\hline
-	\end{tabular}
-\end{table}
-报文项的内容和response表项一致。
-\begin{table}[H]
-	\centering
-	\begin{tabular}{|c|}
-		\hline
-		Command \\
-		\hline
-		source address \\
-		\hline
-		destination address \\
-		\hline
-		payload \\
-		\hline
-	\end{tabular}		
-\end{table}
-其中的源地址和目的地址包含ip和监听端口号。
-TraceRoute报文(count 1 bytes)
-	\begin{table}[H]
-	\centering
-		\begin{tabular}{|c|}
-			\hline
-			Command \\
-			\hline
-			source address \\
-			\hline
-			destination address \\
-			\hline
-			count \\
-			\hline
-		\end{tabular}		
-	\end{table}	
 
-Echo 报文
-	\begin{table}[H]
-	\centering
-		\begin{tabular}{|c|}
-			\hline
-			Command \\
-			\hline
-			source address \\
-			\hline
-			destination address \\
-			\hline
-			local address \\
-			\hline
-		\end{tabular}		
-	\end{table}
 
 % section rip (end)

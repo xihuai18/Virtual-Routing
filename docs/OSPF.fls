@@ -1,0 +1,4 @@
+PWD D:/Virtual-Routing/docs
+INPUT e:/texlive/2017/texmf-var/web2c/xetex/xelatex.fmt
+INPUT ./OSPF.tex
+OUTPUT OSPF.log
