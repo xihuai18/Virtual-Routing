@@ -13,4 +13,6 @@ local_note.md
 *.toc
 *.pkg
 *.pyz
+*.fls
+*.fdb_latexmk
 */report.pdf
