@@ -222,6 +222,10 @@ INPUT RIP.tex
 INPUT RIP.tex
 INPUT OSPF.tex
 INPUT OSPF.tex
+INPUT imgs/topo2/tpop1.png
+INPUT imgs/ospfTest1.PNG
+INPUT imgs/topo2/topo2.png
+INPUT imgs/ospfTest2.PNG
 INPUT Centralized.tex
 INPUT Centralized.tex
 INPUT report.aux

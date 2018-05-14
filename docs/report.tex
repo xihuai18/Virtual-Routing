@@ -29,18 +29,37 @@
 \input{cover}
 \tableofcontents
 \newpage
-% TODO project review
 \section{项目介绍} % (fold)
 \label{sec:项目介绍}
-
+	模拟网络层路由项目包含三个部分：
+	\begin{enumerate}
+		\item 基本RIP协议
+		\item 基本OSPF协议
+		\item 基本中心化路由协议实现
+	\end{enumerate}
+	\par 在其中的每一个部分中，都实现了基本的路由功能以及对于基本算法缺点和不足的改进，比如，在基本RIP协议中，使用split-horizon、poison-inverse和holddown方法缓解了无穷计数问题；在基本OSPF协议中，实现了多条等费用路径的路由选择，并且解决了路由循环问题和改善了路由震荡问题；在中心化路由协议中使用Twisted异步编程框架以减轻服务器进程的资源消耗；等等。项目中3个部分使用的都是UDP协议以传输路由信息，使用UDP也节约了网络资源。
+	\par 项目主页见\url{https://github.com/Leo-xh/Virtual-Routing}。
 % section 项目介绍 (end)
 \input{RIP}
 \input{OSPF}
 \input{Centralized}
 
+\section{安装与部署} % (fold)
+\label{sec:安装与部署}
+
+% section 安装与部署 (end)
+
+\section{项目管理记录} % (fold)
+\label{sec:项目管理记录}
+
+% section 项目管理记录 (end)
+
 \section{总结} % (fold)
 \label{sec:总结}
-
+	\subsection{关于在应用层模拟网络层} % (fold)
+	\label{sub:关于在应用层模拟网络层协议}
+	
+	% subsection 关于在应用层模拟网络层 (end)
 % section 总结 (end)
 
 

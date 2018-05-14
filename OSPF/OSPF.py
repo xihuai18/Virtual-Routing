@@ -15,7 +15,7 @@ class OSPF(object):
     version = 2
     helloInterval = 10 // 5
     deadInterval = 60
-    random.seed(math.ceil(time.time()*207))
+    random.seed(math.ceil(time.time() * 207))
     broadcastInterval = random.randint(20, 30) // 5
     TraceRouteInterval = 5
     summit = b''
@@ -65,15 +65,16 @@ class OSPF(object):
                 sourceAddress = (items[0], int(items[1]))
                 if sourceAddress == self.address:
                     for i in range(2, len(items), 3):
-                        destAddress = (items[i], int(items[i+1]))
-                        cost = int(items[i+2])
+                        destAddress = (items[i], int(items[i + 1]))
+                        cost = int(items[i + 2])
                         self.__addNeighbour((destAddress, cost), {})
 
     def __addNeighbour(self, neighbourItem, neighbourLS):
         self.distanceVector[neighbourItem[0]] = [neighbourItem[0], ]
         self.neighbour.update({neighbourItem[0]: neighbourItem[1]})
         self.adjMatrix.update({neighbourItem[0]: neighbourLS})
-        self.adjMatrix[self.address].update({neighbourItem[0]: neighbourItem[1]})
+        self.adjMatrix[self.address].update(
+            {neighbourItem[0]: neighbourItem[1]})
         self.neighbourTimer.update({neighbourItem[0]: threading.Timer(
             self.deadInterval, self.__removeNeighbour,
             args=[neighbourItem[0]])})
@@ -115,7 +116,8 @@ class OSPF(object):
                         self.forwardPacket.append(md5)
                     else:
                         self.forwardPacket[self.forwardPacketIndex] = md5
-                        self.forwardPacketIndex = (self.forwardPacketIndex + 1) % 5
+                        self.forwardPacketIndex = (
+                            self.forwardPacketIndex + 1) % 5
                 md5Lock.release()
                 return
             elif destAddress == self.address:
@@ -163,7 +165,7 @@ class OSPF(object):
     def __LSUReceived(self, sourceAddress, data):
         sourceAddressNeighbour = {}
         for i in range(0, len(data), 8):
-            (ip, port, metric) = struct.unpack("!IHH", data[i:i+8])
+            (ip, port, metric) = struct.unpack("!IHH", data[i:i + 8])
             address = (utils.int2ip(ip), port)
             sourceAddressNeighbour.update({address: metric})
         self.__updateVector(sourceAddress, sourceAddressNeighbour)
@@ -207,7 +209,7 @@ class OSPF(object):
 
     def __broadcastReceived(self, transmitAddress, sourceAddress, packet):
         if not sourceAddress in self.distanceVector:
-            return 
+            return
         bestHop = self.distanceVector[sourceAddress]
         # Reverse Path First
         # bestHop may be multiple
@@ -285,11 +287,12 @@ class OSPF(object):
     def __sendLSU(self, address, packet=None):
         if packet == None:
             packet = struct.pack("!BIHIH", 2, utils.ip2int(self.address[0]),
-                                    self.address[1], utils.ip2int(self.address[0]),
-                                    self.address[1])
+                                 self.address[1], utils.ip2int(
+                                     self.address[0]),
+                                 self.address[1])
             for item in self.neighbour.keys():
                 packet += struct.pack("!IHH", utils.ip2int(item[0]), item[1],
-                                                self.neighbour[item])
+                                      self.neighbour[item])
         else:
             packet = packet[0:7] + struct.pack("!IH", utils.ip2int(self.address[0]),
                                                self.address[1]) + packet[13:]
@@ -325,7 +328,7 @@ class OSPF(object):
         # print("before:", self.distanceVector)
         # print("")
         self.DistanceVectorLock.acquire()
-        if neighbour is not None: 
+        if neighbour is not None:
             self.adjMatrix[neighbour] = neighbourVector
         # print("adjMatrix of", self.address)
         # for nb in self.adjMatrix:
