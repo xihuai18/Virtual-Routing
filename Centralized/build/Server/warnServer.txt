@@ -1,0 +1,39 @@
+missing module named multiprocessing.SimpleQueue - imported by multiprocessing, concurrent.futures.process
+missing module named multiprocessing.set_start_method - imported by multiprocessing, multiprocessing.spawn
+missing module named multiprocessing.get_start_method - imported by multiprocessing, multiprocessing.spawn
+missing module named multiprocessing.TimeoutError - imported by multiprocessing, multiprocessing.pool
+missing module named multiprocessing.get_context - imported by multiprocessing, multiprocessing.pool, multiprocessing.managers, multiprocessing.sharedctypes
+missing module named multiprocessing.BufferTooShort - imported by multiprocessing, multiprocessing.connection
+missing module named multiprocessing.AuthenticationError - imported by multiprocessing, multiprocessing.connection
+missing module named cookielib - imported by twisted.python.compat
+missing module named urllib.unquote - imported by urllib, twisted.python.compat, asn1crypto._iri
+missing module named urllib.quote - imported by urllib, twisted.python.compat, asn1crypto._iri
+missing module named urlparse - imported by twisted.python.compat, asn1crypto._iri
+missing module named _scproxy - imported by urllib.request
+missing module named StringIO - imported by twisted.python.compat, six
+missing module named cStringIO - imported by twisted.python.compat, twisted.python.util, asn1crypto.core
+missing module named copy_reg - imported by cStringIO
+missing module named fcntl - imported by asyncio.unix_events, twisted.internet.fdesc, pty, twisted.internet.process
+missing module named asyncio.DefaultEventLoopPolicy - imported by asyncio, asyncio.events
+missing module named Queue - imported by twisted.internet.threads, twisted._threads._pool
+missing module named 'twisted.python._sendmsg' - imported by twisted.python.sendmsg
+missing module named __builtin__ - imported by twisted.internet.abstract
+missing module named UserDict - imported by asn1crypto._ordereddict, attr._compat
+runtime module named six.moves - imported by cryptography.x509.general_name
+missing module named 'multiprocessing.forking' - imported by e:\anaconda\lib\site-packages\PyInstaller\loader\rthooks\pyi_rth_multiprocessing.py
+missing module named resource - imported by posix, twisted.internet.process, D:\Virtual-Routing\Centralized\Server.py
+missing module named posix - imported by os, D:\Virtual-Routing\Centralized\Server.py
+missing module named _posixsubprocess - imported by subprocess, multiprocessing.util, D:\Virtual-Routing\Centralized\Server.py
+missing module named 'org.python' - imported by pickle, D:\Virtual-Routing\Centralized\Server.py, xml.sax
+missing module named readline - imported by cmd, code, pdb, D:\Virtual-Routing\Centralized\Server.py
+excluded module named _frozen_importlib - imported by importlib, importlib.abc, D:\Virtual-Routing\Centralized\Server.py
+missing module named _frozen_importlib_external - imported by importlib._bootstrap, importlib, importlib.abc, D:\Virtual-Routing\Centralized\Server.py
+missing module named _winreg - imported by platform, D:\Virtual-Routing\Centralized\Server.py
+missing module named java - imported by platform, D:\Virtual-Routing\Centralized\Server.py
+missing module named 'java.lang' - imported by platform, D:\Virtual-Routing\Centralized\Server.py, xml.sax._exceptions
+missing module named vms_lib - imported by platform, D:\Virtual-Routing\Centralized\Server.py
+missing module named termios - imported by tty, getpass, twisted.internet.process, D:\Virtual-Routing\Centralized\Server.py
+missing module named grp - imported by shutil, tarfile, distutils.archive_util, twisted.python.util, D:\Virtual-Routing\Centralized\Server.py
+missing module named org - imported by copy, D:\Virtual-Routing\Centralized\Server.py
+missing module named pwd - imported by posixpath, shutil, tarfile, http.server, webbrowser, distutils.util, distutils.archive_util, netrc, getpass, twisted.python.util, D:\Virtual-Routing\Centralized\Server.py
+missing module named _dummy_threading - imported by dummy_threading, D:\Virtual-Routing\Centralized\Server.py
