@@ -37,7 +37,7 @@
 		\item 基本OSPF协议
 		\item 基本中心化路由协议实现
 	\end{enumerate}
-	\par 在其中的每一个部分中，都实现了基本的路由功能以及对于基本算法缺点和不足的改进，比如，在基本RIP协议中，使用split-horizon、poison-inverse和holddown方法缓解了无穷计数问题；在基本OSPF协议中，实现了多条等费用路径的路由选择，并且解决了路由循环问题和改善了路由震荡问题；在中心化路由协议中使用Twisted异步编程框架以减轻服务器进程的资源消耗；等等。项目中3个部分使用的都是UDP协议以传输路由信息，使用UDP也节约了网络资源。
+	\par 在其中的每一个部分中，都实现了基本的路由功能以及对于基本算法缺点和不足的改进，比如，在基本RIP协议中，使用split-horizon、poison-inverse，holddown方法和triggered update方法缓解了无穷计数问题；在基本OSPF协议中，实现了多条等费用路径的路由选择，并且解决了路由循环问题和改善了路由震荡问题；在中心化路由协议中使用Twisted异步编程框架以减轻服务器进程的资源消耗；等等。项目中3个部分使用的都是UDP协议以传输路由信息，使用UDP也节约了网络资源。
 	\par 项目主页见\url{https://github.com/Leo-xh/Virtual-Routing}。
 % section 项目介绍 (end)
 \input{RIP}
@@ -63,5 +63,19 @@
 % section 总结 (end)
 
 
+
+
+\newpage
+\begin{appendices}
+    \section{参考文献} % (fold)
+        \begin{enumerate}
+        \item RFC2328, Open Shorst Path First Protocol.
+        \item RFC2453, Route Information Protocol.
+        \item \url{https://en.wikipedia.org/wiki/Open_Shortest_Path_First}, Wikipedia for OSPF.
+        \item \url{https://en.wikipedia.org/wiki/Routing_Information_Protocol}, Wikipedia for RIP.
+        \item \url{http://www.clnchina.com.cn/discussion_forum/2010/0721/8402.shtml}, Four Timer in RIP.
+        \end{enumerate}
+    % section  (end)
+\end{appendices}
 
 \end{document}

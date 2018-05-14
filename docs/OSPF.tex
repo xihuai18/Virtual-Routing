@@ -98,6 +98,7 @@
 			\hline
 		\end{tabular}		
 	\end{table}
+	普通报文的格式与在RIP中的格式相同。
 	报文项解释：
 	\begin{enumerate}[(1)]
 	\item Command（1 Byte）：指明这条报文的类型。
@@ -128,7 +129,7 @@
 	% subsection 协议扩展 (end)
 	\subsection{协议实现} % (fold)
 	\label{sub:协议实现}
-		本基本OSPF协议由Python实现，主要利用的是socket进行套接字编程、struct库进行数据的打包和解包、threading库管理线程和计时器。
+		本OSPF协议基本由Python实现，主要利用的是socket进行套接字编程、struct库进行数据的打包和解包、threading库管理线程和定时器。
 		\par 实现方法实现了一个OSPF协议类，处理内部流程和为外部调用留出了收发数据、查询路由等接口。
 	% subsection 协议实现 (end)
 	\subsection{结果} % (fold)
