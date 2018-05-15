@@ -55,8 +55,8 @@
 			\end{enumerate}
 		\item 源代码的安装与部署：
 			\begin{enumerate}
-				\item 首先需要解决项目所需要的依赖环境，可在Linux或Windows环境下，安装python3.0及3.0以上版本，然后安装python3-pip，再用pip直接下载安装或者到网站\url{https://pypi.org/}上下载轮子或者源代码，安装twisted模块（中心化项目需要）。
-				\item 然后，便可以在5（6）个终端或者命令行，先进入项目的executable文件夹中，分别输入：python A.py，到：python E.py（中心化项目还需要在第六个终端或命令行输入python Server.py）；
+				\item 首先需要解决项目所需要的依赖环境，可在Linux或Windows环境下，安装python3.0及3.0以上版本，然后安装python3-pip，再用pip直接下载安装或者到网站\url{https://pypi.org/}上下载wheel文件或者源代码，安装twisted模块（中心化项目需要）。
+				\item 然后，便可以在5（或6）个终端/命令行进行测试，先进入项目的executable文件夹中，分别输入：python A.py，到：python E.py（中心化项目还需要在第六个终端或命令行输入python Server.py）；
 				最后再在各个终端或者命令行输入：topo.txt或topo2.txt，便可以完成5个路由器按照拓补图1或拓扑图2的安装和部署，并由A路由器执行traceRoute，测试到其余路由器的路径。
 			\end{enumerate}
 	\end{itemize}
@@ -109,23 +109,17 @@
 				\hline
 				比较方面 & RIP & OSPF & Centralized \\
 				\hline
-				工作原理 &  &  &  \\
+				算法基础 & Bellman-Ford & Dijkstra & Dijkstra \\
 				\hline
-				算法结构 & 迭代的、分布的 & 全局信息的 &  \\
+				算法结构 & 迭代的、分布的 & 非迭代、基于全局信息 &  非迭代、基于全局信息\\
 				\hline
-				时间复杂性 &  &  &  \\
+				时间复杂性 & $O(n)$（一次更新） & $O(mn^2)$（$m$为邻居数） & $O(n^3)$ \\
 				\hline
-				报文复杂性 &  &  &  \\
-				\hline
-				收敛速度 & 慢 & 快 &  \\
+				收敛速度 & 慢 & 快 & 快 \\
 				\hline
 				跳数的限制 & 15跳 & 无 & 无 \\
 				\hline
-				路由表的更新 &  &  &  \\
-				\hline
-				健壮性 & 较差 & 较强 &  \\
-				\hline
-				可扩展性 & 较差 & 较好 &  \\
+				可扩展性 & 较差 & 较好 & 较差 \\
 				\hline
 				环路 & 短时间内容易出现 & 不会出现 & 不会出现 \\
 				\hline

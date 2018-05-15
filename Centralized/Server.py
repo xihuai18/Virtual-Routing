@@ -68,6 +68,7 @@ class ServerProtocol(DatagramProtocol):
         if client not in self.map or neighbourVector != self.map[client]:
             self.map[client] = neighbourVector
             self.__computeNextHop()
+            self.__sendForwardTable()
         self.mapLock.release()
 
     def __dijkstra(self, src):
@@ -93,17 +94,9 @@ class ServerProtocol(DatagramProtocol):
         return dist
 
     def __computeNextHop(self):
-        # dist = copy.deepcopy(self.map)
         self.nextHopForRouters.clear()
         for i in self.map:
             self.nextHopForRouters[i] = {}
-        # for k in self.map:
-        #     for i in self.map:
-        #         for j in self.map:
-        #             if k in dist[i] and j in dist[k]:
-        #                 if j not in dist[i] or dist[i][k] + dist[k][j] < dist[i][j]:
-        #                     dist[i][j] = dist[i][k] + dist[k][j]
-        #                     self.nextHopForRouters[i][j] = k
         routerDist = {}
         for router in self.map:
             routerDist[router] = self.__dijkstra(router)
