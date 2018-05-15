@@ -2,7 +2,7 @@
 */.vs/*
 local_note.md
 */__pycache__
-
+local-file
 */build
 */build/*
 *.aux
@@ -15,4 +15,14 @@ local_note.md
 *.pyz
 *.fls
 *.fdb_latexmk
+*/*.aux
+*/*.log
+*/*.xdv
+*/*.out
+*/*.gz
+*/*.toc
+*/*.pkg
+*/*.pyz
+*/*.fls
+*/*.fdb_latexmk
 */report.pdf
