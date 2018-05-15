@@ -8,7 +8,13 @@
 	\label{sub:算法}
 		\subsubsection{路由计算算法} % (fold)
 		\label{ssub:路由计算算法}
-		
+			在原生LS算法中，一个路由器的路由计算的方法是：以自身为起点，执行Dijkstra算法以得到一棵最短路径树，然后根据最短路径树得到转发表。采用这种方法，计算出的到每个目的地的最短路径是唯一的。
+			\par 为了实现多条等费用最短路径选择，本项目采用以下算法过程：
+			\begin{itemize}
+				\item 对于路由器的每个邻居$nb$，以$nb$为起点执行Dijkstra算法，得到$nb$到其他路由器的最短路径距离$dist_{nb}$。
+				\item 使用Bellman-Ford更新公式，计算自身到其他路由器的距离：$$dist_{self}(dest) = \min_{nb}\{dist_{nb}(dest) + metric(self,nb)\} $$
+				\item 对于每一个目的地$dest$，依次判断每个邻居是否能作为下一跳（即该邻居是否在一条最短路径上）。判断一个邻居$nb$能作为下一跳的依据是：$nb$能到达$dest$并且满足公式$$dist_{self}(dest) = dist_{nb}(dest) + metric(self,nb)$$将符合条件的邻居加入转发表中去往$dest$的下一跳列表。
+			\end{itemize}		
 		% subsubsection 路由计算算法 (end)
 		\subsubsection{广播算法} % (fold)
 		\label{ssub:广播算法}
@@ -44,71 +50,71 @@
 			\hline
 		\end{tabular}		
 	\end{table}
-	\newpage
+
 	LSU报文（广播报文）。
 	\begin{table}[H]
 	\centering
-		\begin{tabular}{|c|}
-			\hline
-			Command \\
-			\hline
-			Source address \\
-			\hline
-			Transmit address \\
-			\hline
-			Destination address \\
-			\hline
-			Metric \\
-			\hline
-			Repeat of last 8 bytes \\
-			\hline
-			$\cdots$ \\
-			\hline
-		\end{tabular}		
-	\end{table}
+	\begin{tabular}{|c|}
+		\hline                 
+		Command                \\
+		\hline                 
+		Source address         \\
+		\hline                 
+		Transmit address       \\
+		\hline                 
+		Destination address    \\
+		\hline                 
+		Metric                 \\
+		\hline                 
+		Repeat of last 8 bytes \\
+		\hline                 
+		$\cdots$               \\
+		\hline                 
+	\end{tabular}		
+\end{table}
 
-	TraceRoute报文
-	\begin{table}[H]
+TraceRoute报文
+\begin{table}[H]
 	\centering
-		\begin{tabular}{|c|}
-			\hline
-			Command \\
-			\hline
-			source address \\
-			\hline
-			destination address \\
-			\hline
-			count \\
-			\hline
-		\end{tabular}		
-	\end{table}	
+	\begin{tabular}{|c|}
+		\hline              
+		Command             \\
+		\hline              
+		source address      \\
+		\hline              
+		destination address \\
+		\hline              
+		count               \\
+		\hline              
+	\end{tabular}		
+\end{table}	
 
-	Echo 报文
-	\begin{table}[H]
+Echo 报文
+\begin{table}[H]
 	\centering
-		\begin{tabular}{|c|}
-			\hline
-			Command \\
-			\hline
-			source address \\
-			\hline
-			destination address \\
-			\hline
-			local address \\
-			\hline
-		\end{tabular}		
-	\end{table}
-	普通报文的格式与在RIP中的格式相同。
-	报文项解释：
-	\begin{enumerate}[(1)]
+	\begin{tabular}{|c|}
+		\hline              
+		Command             \\
+		\hline              
+		source address      \\
+		\hline              
+		destination address \\
+		\hline              
+		local address       \\
+		\hline              
+	\end{tabular}		
+\end{table}
+普通报文的格式与在RIP中的格式相同。
+报文项解释：
+\begin{enumerate}[(1)]
 	\item Command（1 Byte）：指明这条报文的类型。
-	\begin{enumerate}[]
-		\item 0: 普通报文
-		\item 1: hello
-		\item 2: LSU（Link State Update）
-		\item 3: traceRoute
-		\item 4: Echo
-	\end{enumerate}
+	      \begin{enumerate}[]
+	      	\item 0: 普通报文
+	      	\item 1: hello
+	      	\item 2: LSU（Link State Update）
+	      	\item 3: traceRoute
+	      	\item 4: Echo
+	      \end{enumerate}
 	\item Source address（6 Bytes）：指明发送方的源地址和监听端口。
 	\item Destination address（6 Bytes）：指明目的地的源地址和监听端口。
 	\item Transmit address（6 Bytes）：指明广播中转发者的源地址和监听端口。
@@ -163,7 +169,7 @@
 			\item 原生的LS算法会导致路由震荡和路由循环问题，而我们实现的OSPF协议改善甚至基本解决了这类问题。
 		\end{itemize}
 		
-	% subsection 总结 (end)
+% subsection 总结 (end)
 	
 
 % section ospf (end)
