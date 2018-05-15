@@ -7,7 +7,7 @@ import sys
 import copy
 sys.path.append("../utils/")
 import utils
-import json
+import hashlib
 import math
 
 
@@ -22,6 +22,7 @@ class OSPF(object):
     path = {}
     DistanceVectorLock = threading.Lock()
     summitLock = threading.Lock()
+    md5Lock = threading.Lock()
 
     def __init__(self, address, filename):
         self.address = address
@@ -30,6 +31,8 @@ class OSPF(object):
         self.traceRouteList = []
         self.neighbour = {}  # address:cost
         self.traceRouteResult = {}
+        self.forwardPacket = []
+        self.forwardPacketIndex = 0
         self.distanceVector = {}
         self.neighbourTimer = {}
         self.recvSocket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -102,9 +105,21 @@ class OSPF(object):
             (ip, port) = struct.unpack("!IH", data[7:13])
             destAddress = (utils.int2ip(ip), port)
             if destAddress != self.address:
-                self.__sendPacket(data, destAddress)
+                m = hashlib.md5()
+                m.update(data)
+                md5 = m.hexdigest()
+                md5Lock.acquire()
+                if md5 not in self.forwardPacket:
+                    self.__sendPacket(data, destAddress)
+                    if len(self.forwardPacket) < 10:
+                        self.forwardPacket.append(md5)
+                    else:
+                        self.forwardPacket[self.forwardPacketIndex] = md5
+                        self.forwardPacketIndex = (self.forwardPacketIndex + 1) % 10
+                md5Lock.release()
                 return
-            self.__normalPacketReceived(sourceAddress, data[13:])
+            else:
+                self.__normalPacketReceived(sourceAddress, data[13:])
         elif command == 1:
             self.__helloReceived(sourceAddress, data[7:])
         elif command == 2:

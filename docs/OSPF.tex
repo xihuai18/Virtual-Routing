@@ -2,7 +2,7 @@
 \label{sec:ospf}
 	\subsection{协议概述} % (fold)
 	\label{sub:协议概述}
-		本项目中实现的OSPF协议是一个基于链路状态的路由协议，运行该协议的每个路由器能够根据收到的所有链路信息计算出一个最短路径树，构造对应的转发表。其链路的权重的赋值取决于带宽，算法使用的是Dijkstra算法和RPF广播算法，定义了Hello和LS（link-state）两种报文格式。实现了多条等费用路径的路由选择，并且解决了路由循环问题和改善了路由震荡问题。在协议的扩展中，实现了该协议下适用的traceRoute功能。
+		本项目中实现的OSPF协议是一个基于链路状态的路由协议，运行该协议的每个路由器能够根据收到的所有链路信息计算出一个最短路径树，构造对应的转发表。其链路的权重的赋值取决于带宽，算法使用的是Dijkstra算法和RPF广播算法，定义了Hello和LS（link-state）两种报文格式。实现了多条等费用路径的路由选择，并且解决了路由循环问题和改善了路由震荡问题。在协议的扩展中，实现了该协议下适用的TraceRoute功能。
 	% subsection 协议概述 (end)
 	\subsection{算法} % (fold)
 	\label{sub:算法}
@@ -27,16 +27,16 @@
 		\label{ssub:协议流程}
 		本项目中实现的OSPF协议主要包含的流程如下：
 		\begin{enumerate}
-			\item 路由器在进入区域时，向所有邻居发送hello报文（该报文用于向邻居声明自己的存在），再向该区域内的路由器广播自己的链路信息。
-			\item 该路由器会定时地发送hello报文和广播链路信息。
-			\item 收到一个hello报文意味着要维持该邻居的状态；而如果在一段时间内没有收到某个邻居路由器的hello报文，则认为该路由器故障或离开该区域。
+			\item 路由器在进入区域时，向所有邻居发送Hello报文（该报文用于向邻居声明自己的存在），再向该区域内的路由器广播自己的链路信息。
+			\item 该路由器会定时地发送Hello报文和广播链路信息。
+			\item 收到一个Hello报文意味着要维持该邻居的状态；而如果在一段时间内没有收到某个邻居路由器的Hello报文，则认为该路由器故障或离开该区域。
 			\item 当自身的链路信息发生改变时，广播链路信息；当收到其它路由器的链路信息时，根据该信息更新自己的关于该区域的链路信息数据库。
 		\end{enumerate}		
 		% subsubsection 协议流程 (end)
 	% subsection 协议特性 (end)
 	\subsection{报文格式} % (fold)
 	\label{sub:报文格式}
-		该协议中包含的Hello报文、LS报文、traceRoute报文、Echo报文、普通数据报文格式如下：
+		该协议中包含的Hello报文、LSU报文、TraceRoute报文、Echo报文、普通数据报文格式如下：
 		\par Hello 报文。
 	\begin{table}[H]
 	\centering
@@ -46,7 +46,7 @@
 			\hline
 			Source address \\
 			\hline
-			Metric \\
+			metric \\
 			\hline
 		\end{tabular}		
 	\end{table}
@@ -64,9 +64,9 @@
 		\hline                 
 		Destination address    \\
 		\hline                 
-		Metric                 \\
+		metric                 \\
 		\hline                 
-		Repeat of last 8 bytes \\
+		repeat of last 8 bytes \\
 		\hline                 
 		$\cdots$               \\
 		\hline                 
@@ -80,11 +80,11 @@ TraceRoute报文
 		\hline              
 		Command             \\
 		\hline              
-		source address      \\
+		Source address      \\
 		\hline              
-		destination address \\
+		Destination address \\
 		\hline              
-		count               \\
+		Count               \\
 		\hline              
 	\end{tabular}		
 \end{table}	
@@ -96,31 +96,31 @@ Echo 报文
 		\hline              
 		Command             \\
 		\hline              
-		source address      \\
+		Source address      \\
 		\hline              
-		destination address \\
+		Destination address \\
 		\hline              
-		local address       \\
+		Local address       \\
 		\hline              
 	\end{tabular}		
 \end{table}
-普通报文的格式与在RIP中的格式相同。
+普通数据报文的格式与在RIP中普通数据报文的格式相同。
 \newpage
 \par 报文项解释：
 \begin{enumerate}[(1)]
 	\item Command（1 Byte）：指明这条报文的类型。
 	      \begin{enumerate}[]
-	      	\item 0: 普通报文
-	      	\item 1: hello
+	      	\item 0: 普通数据报文
+	      	\item 1: Hello
 	      	\item 2: LSU（Link State Update）
-	      	\item 3: traceRoute
+	      	\item 3: TraceRoute
 	      	\item 4: Echo
 	      \end{enumerate}
 	\item Source address（6 Bytes）：指明发送方的源地址和监听端口。
-	\item Destination address（6 Bytes）：指明目的地的源地址和监听端口。
-	\item Transmit address（6 Bytes）：指明广播中转发者的源地址和监听端口。
-	\item Local address（6 Bytes）：指明Echo报文发送者的源地址和监听端口。
-	\item Metric（2 Bytes）：代价度量。
+	\item Destination address（6 Bytes）：指明目的地的地址和监听端口。
+	\item Transmit address（6 Bytes）：指明广播中转发者的地址和监听端口。
+	\item Local address（6 Bytes）：指明Echo报文发送方的源地址和监听端口。
+	\item metric（2 Bytes）：代价度量。
 	\item Count（1 Byte）：路由跳数。
 	\end{enumerate}
 	
@@ -134,6 +134,7 @@ Echo 报文
 					\item LS算法本身是不会产生路由自环的，因为上述路由环路会在各个路由器发出的链路信息通告完全到达其他路由器后消失。但在完成信息通告之前，需要有一定的方法避免因为环路造成的拥塞。
 					\item 本项目中的解决方法是每个路由器缓存最近10个到达数据包的md5码，如果一个新到数据包的md5码与缓存的重复，则将其丢弃。缓存md5码的数量不能太多是因为数据包可能在之后重传。
 				\end{itemize}
+			\newpage
 			\item TraceRoute
 				\begin{itemize}
 					\item 向目的地发跳数为1-32共32个报文，当一个路由器收到该报文，则提取其中的跳数，并将它减一。
