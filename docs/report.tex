@@ -51,7 +51,7 @@
 			\begin{enumerate}
 				\item 三个项目都已打包成可执行文件(.exe)，直接在Windows系统上双击打开，便可以使用，无需安装python及其各个使用到的python模块。
 				\item 只需打开项目中executable文件夹中的A.exe到E.exe文件（中心化项目还需要打开Server.exe文件），并在各个窗口中输入：topo.txt或topo2.txt，便自动按照拓扑图1或拓扑图2部署好5个路由，并且A路由执行traceRoute，测试到其余路由的路径；
-				\item 或者，可用Windows8或Windows10的powershell命令行工具，执行各个项目中executable文件中的run.ps1脚本文件（./run.ps1），便自动打开各个需要的exe文件，只需在各个窗口中输入：topo.txt或topo2.txt即可。
+				\item 或者，可用Windows8或Windows10的powershell命令行工具，执行各个项目中executable文件中的run.ps1脚本文件（.$\backslash$run.ps1），便自动打开各个需要的exe文件，只需在各个窗口中输入：topo.txt或topo2.txt即可。
 			\end{enumerate}
 		\item 源代码的安装与部署：
 			\begin{enumerate}
@@ -104,29 +104,30 @@
 	\subsection{三种路由方式的比较} % (fold)
 	\label{sub:三种路由方式的比较}
 		\begin{table}[H]
+			\centering
 			\begin{tabular}{|l|l|l|l|}
 				\hline
 				比较方面 & RIP & OSPF & Centralized \\
 				\hline
 				工作原理 &  &  &  \\
 				\hline
-				算法结构 &  &  &  \\
+				算法结构 & 迭代的、分布的 & 全局信息的 &  \\
 				\hline
 				时间复杂性 &  &  &  \\
 				\hline
 				报文复杂性 &  &  &  \\
 				\hline
-				收敛速度 &  &  &  \\
+				收敛速度 & 慢 & 快 &  \\
 				\hline
-				跳数的限制 &  &  &  \\
+				跳数的限制 & 15跳 & 无 & 无 \\
 				\hline
 				路由表的更新 &  &  &  \\
 				\hline
-				健壮性 &  &  &  \\
+				健壮性 & 较差 & 较强 &  \\
 				\hline
-				可扩展性 &  &  &  \\
+				可扩展性 & 较差 & 较好 &  \\
 				\hline
-				环路 &  &  &  \\
+				环路 & 短时间内容易出现 & 不会出现 & 不会出现 \\
 				\hline
 			\end{tabular}
 		\end{table}

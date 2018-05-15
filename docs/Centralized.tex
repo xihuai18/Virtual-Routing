@@ -3,6 +3,7 @@
 	\label{sub:协议概述}
 		中心化路由协议是一个基于链路状态的网络层路由协议，使用的是Dijkstra算法，该协议中定义了一个服务器，负责接收区域内运行该协议的路由器的链路信息并且根据这些信息计算出整个区域内路由器的最短路径树，构造出每个路由器的转发表，并发送给对应路由器。并且在服务器中能够获取指定路由器对的最短路径。
 	% subsection 协议概述 (end)
+	\newpage
 	\subsection{算法} % (fold)
 	\label{sub:算法}
 		在中心服务器中，对每一个路由器使用与OSPF中相同的方法计算其转发表，在此不再赘述。唯一区别在于，为了避免重复计算，先以每个路由器为起点执行Dijkstra算法，然后再计算每个路由器的转发表。（否则，在一个路由器$r$的每个邻居的计算过程中，都需要执行一次以$r$为起点的Dijkstra算法。）
@@ -58,6 +59,7 @@
 				\hline
 			\end{tabular}		
 		\end{table}
+		\newpage
 		\par Hello 报文：
 		\begin{table}[H]
 		\centering
@@ -115,6 +117,7 @@
 			\item 使用Twisted异步编程框架编写服务器端。使用Twisted框架编写的服务器端具有低功耗、资源利用率高的特点，同时事件驱动的内在逻辑也符合该服务器的功能特性。
 		\end{enumerate}
 	% subsection 协议实现 (end)
+	\newpage
 	\subsection{结果} % (fold)
 	\label{sub:结果}
 		测试结果如下图\ref{fig:CentralizedTest1}和\ref{fig:CentralizedTest2}所示：
