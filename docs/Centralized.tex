@@ -5,7 +5,7 @@
 	% subsection 协议概述 (end)
 	\subsection{算法} % (fold)
 	\label{sub:算法}
-
+		在中心服务器中，对每一个路由器使用与OSPF中相同的方法计算其转发表，在此不再赘述。唯一区别在于，为了避免重复计算，先以每个路由器为起点执行Dijkstra算法，然后再计算每个路由器的转发表。（否则，在一个路由器$r$的每个邻居的计算过程中，都需要执行一次以$r$为起点的Dijkstra算法。）
 	% subsection 算法 (end)
 	\subsection{协议特性} % (fold)
 	\label{sub:协议特性}
