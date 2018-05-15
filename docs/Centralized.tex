@@ -5,7 +5,7 @@
 	% subsection 协议概述 (end)
 	\subsection{算法} % (fold)
 	\label{sub:算法}
-
+		在中心服务器中，对每一个路由器使用与OSPF中相同的方法计算其转发表，在此不再赘述。唯一区别在于，为了避免重复计算，先以每个路由器为起点执行Dijkstra算法，然后再计算每个路由器的转发表。（否则，在一个路由器$r$的每个邻居的计算过程中，都需要执行一次以$r$为起点的Dijkstra算法。）
 	% subsection 算法 (end)
 	\subsection{协议特性} % (fold)
 	\label{sub:协议特性}
@@ -40,6 +40,7 @@
 				\hline
 			\end{tabular}		
 		\end{table}
+
 		\par Forward Table 报文：
 		\begin{table}[H]
 		\centering
@@ -103,7 +104,9 @@
 	% subsection 报文格式 (end)
 	\subsection{协议扩展} % (fold)
 	\label{sub:协议扩展}
-		查找路径功能。在服务器中，实现了指定路由器对查找两者之间的最短路径的功能。
+		\begin{enumerate}
+			\item 查找路径功能。在服务器中，实现了指定路由器对查找两者之间的最短路径的功能。			
+		\end{enumerate}
 	% subsection 协议扩展 (end)
 	\subsection{协议实现} % (fold)
 	\label{sub:协议实现}
@@ -133,9 +136,13 @@
 	% subsection 结果 (end)
 	\subsection{总结} % (fold)
 	\label{sub:总结}
-		\begin{enumerate}
+		\begin{itemize}
 			\item 由于在中心化路由协议中每个路由器的转发表都是由服务器计算并且同时几乎获得，即转发表基于同一张图结构，则不存在路由循环、路由震荡等问题。
+<<<<<<< HEAD
 			\item 但是中心化路由协议具有滞后性，虽然该滞后性也使得路由更加稳定，但是不能及时地检测到路由的变化，造成某些数据报文发送的浪费。
 		\end{enumerate}
+=======
+		\end{itemize}
+>>>>>>> 8cffb9f82ad63b95e64c115ae777d42918dd40d6
 	% subsection 总结 (end)
 % section Centralized (end)

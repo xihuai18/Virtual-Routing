@@ -46,7 +46,20 @@
 
 \section{安装与部署} % (fold)
 \label{sec:安装与部署}
-
+	\begin{itemize}
+		\item 可执行文件的安装与部署：
+			\begin{enumerate}
+				\item 三个项目都已打包成可执行文件(.exe)，直接在Windows系统上双击打开，便可以使用，无需安装python及其各个使用到的python模块。
+				\item 只需打开项目中executable文件夹中的A.exe到E.exe文件（中心化项目还需要打开Server.exe文件），并在各个窗口中输入：topo.txt或topo2.txt，便自动按照拓扑图1或拓扑图2部署好5个路由，并且A路由执行traceRoute，测试到其余路由的路径；
+				\item 或者，可用Windows8或Windows10的powershell命令行工具，执行各个项目中executable文件中的run.ps1脚本文件（./run.ps1），便自动打开各个需要的exe文件，只需在各个窗口中输入：topo.txt或topo2.txt即可。
+			\end{enumerate}
+		\item 源代码的安装与部署：
+			\begin{enumerate}
+				\item 首先需要解决项目所需要的依赖环境，可在Linux或Windows环境下，安装python3.0及3.0以上版本，然后安装python3-pip，再用pip直接下载安装或者到网站\url{https://pypi.org/}上下载轮子或者源代码，安装twisted模块（中心化项目需要）。
+				\item 然后，便可以在5（6）个终端或者命令行，先进入项目的executable文件夹中，分别输入：python A.py，到：python E.py（中心化项目还需要在第六个终端或命令行输入python Server.py）；
+				最后再在各个终端或者命令行输入：topo.txt或topo2.txt，便可以完成5个路由器按照拓补图1或拓扑图2的安装和部署，并由A路由器执行traceRoute，测试到其余路由器的路径。
+			\end{enumerate}
+	\end{itemize}
 % section 安装与部署 (end)
 
 \section{项目管理记录} % (fold)
