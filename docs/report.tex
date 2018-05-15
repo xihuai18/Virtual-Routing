@@ -37,7 +37,7 @@
 		\item 基本OSPF协议
 		\item 基本中心化路由协议实现
 	\end{enumerate}
-	\par 在其中的每一个部分中，都实现了基本的路由功能以及对于基本算法缺点和不足的改进，比如，在基本RIP协议中，使用split-horizon、poison-inverse，holddown方法和triggered update方法缓解了无穷计数问题；在基本OSPF协议中，实现了多条等费用路径的路由选择，并且解决了路由循环问题和改善了路由震荡问题；在中心化路由协议中使用Twisted异步编程框架以减轻服务器进程的资源消耗；等等。项目中3个部分使用的都是UDP协议以传输路由信息，使用UDP也节约了网络资源。
+	\par 在其中的每一个部分中，都实现了基本的路由功能以及对于基本算法缺点和不足的改进，比如，在基本RIP协议中，使用毒性逆转（split-horizon with poison inverse）、延时刷新（flush timer）、触发更新（triggered update）、抑制更新（holddown）方法缓解了无穷计数问题；在基本OSPF协议中，实现了多条等费用路径的路由选择，并且解决了路由循环问题和改善了路由震荡问题；在中心化路由协议中使用Twisted异步编程框架以减轻服务器进程的资源消耗；等等。项目中3个部分使用的都是UDP协议以传输路由信息，使用UDP也节约了网络资源。
 	\par 项目主页见\url{https://github.com/Leo-xh/Virtual-Routing}。
 % section 项目介绍 (end)
 \input{RIP}
@@ -88,9 +88,43 @@
 
 \section{总结} % (fold)
 \label{sec:总结}
+	\subsection{三种路由方式的比较} % (fold)
+	\label{sub:三种路由方式的比较}
+		\begin{table}[H]
+			\begin{tabular}{|l|l|l|l|}
+				\hline
+				比较方面 & RIP & OSPF & Centralized \\
+				\hline
+				工作原理 &  &  &  \\
+				\hline
+				算法结构 &  &  &  \\
+				\hline
+				时间复杂性 &  &  &  \\
+				\hline
+				报文复杂性 &  &  &  \\
+				\hline
+				收敛速度 &  &  &  \\
+				\hline
+				跳数的限制 &  &  &  \\
+				\hline
+				路由表的更新 &  &  &  \\
+				\hline
+				健壮性 &  &  &  \\
+				\hline
+				可扩展性 &  &  &  \\
+				\hline
+				环路 &  &  &  \\
+				\hline
+			\end{tabular}
+		\end{table}
+		由此，得出三者主要的优缺点。
+		\begin{itemize}
+			\item RIP协议最大的优点就是简单，而其缺点也明显，就是路由跳数的限制与路由器之间交换完整的路由信息的开销太大。原本的DV算法还有其“坏消息传播慢”的特点，使得收敛过程太长，但是本项目中实现的RIP协议通过解决无穷计数的策略使得“坏消息”传播也快。以上的缺点主要在大型网络中表现出来，由此RIP协议更加适合使用在小型网络中。
+		\end{itemize}
+	% subsection 三种路由方式的比较 (end)
 	\subsection{关于在应用层模拟网络层} % (fold)
 	\label{sub:关于在应用层模拟网络层协议}
-	
+		要实现在应用层模拟网络层的协议，本项目以IP和其监听端口为路由索引，这是因为要在一台电脑上运行多个路由器程序进行模拟。使用UDP协议发送路由信息报文时，注意控制UDP协议的源地址和目的地址之间一定要有一条虚拟链路，这样才能模拟链路层的信息传递。
 	% subsection 关于在应用层模拟网络层 (end)
 % section 总结 (end)
 
