@@ -2,7 +2,7 @@
 */.vs/*
 local_note.md
 */__pycache__
-
+local-file
 */build
 */build/*
 *.aux
